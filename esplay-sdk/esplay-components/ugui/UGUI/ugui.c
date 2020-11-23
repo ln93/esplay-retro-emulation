@@ -48,7 +48,8 @@
 //  Oct 11, 2014  V0.1  First release.
 /* -------------------------------------------------------------------------------- */
 #include "ugui.h"
-
+#include "fontch.h"
+#include "stdio.h"
 /* Static functions */
  UG_RESULT _UG_WindowDrawTitle( UG_WINDOW* wnd );
  void _UG_WindowUpdate( UG_WINDOW* wnd );
@@ -61,7 +62,7 @@
 
  /* Pointer to the gui */
 static UG_GUI* gui;
-
+void _UG_Putcn( char chr,char chrb, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FONT* font);
 #ifdef USE_FONT_4X6
 __UG_FONT_DATA unsigned char font_4x6[256][6]={
 {0x00,0x00,0x00,0x00,0x00,0x00}, // 0x00
@@ -4581,8 +4582,8 @@ UG_S16 UG_Init( UG_GUI* g, void (*p)(UG_S16,UG_S16,UG_COLOR), UG_S16 x, UG_S16 y
    #ifdef USE_COLOR_RGB565
    g->desktop_color = 0x5C5D;
    #endif
-   g->fore_color = C_WHITE;
-   g->back_color = C_BLACK;
+   g->fore_color = C_DARK_BLUE;
+   g->back_color = C_WHITE;
    g->next_window = NULL;
    g->active_window = NULL;
    g->last_window = NULL;
@@ -5011,35 +5012,65 @@ void UG_DrawLine( UG_S16 x1, UG_S16 y1, UG_S16 x2, UG_S16 y2, UG_COLOR c )
    }  
 }
 
+void UG_Putcn( char chr,char chrb, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc )
+{
+	_UG_Putcn(chr,chrb,x,y,fc,bc,&gui->font);
+}
 void UG_PutString( UG_S16 x, UG_S16 y, char* str )
 {
    UG_S16 xp,yp;
    UG_U8 cw;
    char chr;
-
+   char chrb;
    xp=x;
    yp=y;
 
    while ( *str != 0 )
    {
       chr = *str++;
-	  if (chr < gui->font.start_char || chr > gui->font.end_char) continue;
-      if ( chr == '\n' )
-      {
-         xp = gui->x_dim;
-         continue;
-      }
-	  cw = gui->font.widths ? gui->font.widths[chr - gui->font.start_char] : gui->font.char_width;
+	  if (chr < gui->font.start_char || chr > gui->font.end_char) 
+     {
 
-      if ( xp + cw > gui->x_dim - 1 )
-      {
-         xp = x;
-         yp += gui->font.char_height+gui->char_v_space;
-      }
+            continue;
 
-      UG_PutChar(chr, xp, yp, gui->fore_color, gui->back_color);
+     }
+     else
+     {
+        if (chr>=0x80)
+        {
+            chrb=*str++;
+            cw = gui->font.widths ? gui->font.widths[chr - gui->font.start_char] : gui->font.char_width;
 
-      xp += cw + gui->char_h_space;
+            if ( xp + cw > gui->x_dim - 1 )
+            {
+               xp = x;
+               yp += gui->font.char_height+gui->char_v_space;
+            }
+
+            UG_Putcn(chr,chrb, xp, yp, gui->fore_color, gui->back_color);
+
+            xp += cw*2 + gui->char_h_space;
+        }
+        else
+        {
+            if ( chr == '\n' )
+            {
+               xp = gui->x_dim;
+               continue;
+            }
+            cw = gui->font.widths ? gui->font.widths[chr - gui->font.start_char] : gui->font.char_width;
+
+            if ( xp + cw > gui->x_dim - 1 )
+            {
+               xp = x;
+               yp += gui->font.char_height+gui->char_v_space;
+            }
+
+            UG_PutChar(chr, xp, yp, gui->fore_color, gui->back_color);
+
+            xp += cw + gui->char_h_space;
+        }
+     }
    }
 }
 
@@ -5332,7 +5363,71 @@ const UG_COLOR pal_checkbox_released[] =
 #endif
 
 
+void _UG_Putcn( char chr,char chrb, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc, const UG_FONT* font)
+{//chrb is low 8 bit
+   UG_U16 i,j,k,xo,yo,c,bn,actual_char_width;
+   UG_U8 b,bt,bt2;
+   UG_U32 index;
+   UG_COLOR color;
+   UG_U16 *datap;
+   UG_U16 dat;
+   void(*push_pixel)(UG_COLOR);
+   bt = (UG_U8)chr;
+   bt2 = (UG_U8)chrb;
+   datap = &fontzn[32*((bt-0xa0-1)*94+(bt2-0xa0-1))];
+   yo = y;
+   bn = 16;// (font->char_width;
+   if ( !bn ) return;
+   bn >>= 3;
+   if ( 16 % 8 ) bn++;
+   actual_char_width =16; // (font->widths ? font->widths[bt - font->start_char] : font->char_width);
 
+   /* Is hardware acceleration available? */
+   if ( gui->driver[DRIVER_FILL_AREA].state & DRIVER_ENABLED )
+   {
+	   //(void(*)(UG_COLOR))
+      push_pixel = ((void*(*)(UG_S16, UG_S16, UG_S16, UG_S16))gui->driver[DRIVER_FILL_AREA].driver)(x,y,x+actual_char_width-1,y+16-1);
+
+		   //index = (bt - font->start_char)* font->char_height * font->char_width;
+         index = (bt - font->start_char)* 16 * 16;
+		   for( j=0;j<16;j++ )
+		   {
+            dat=*datap;
+            dat=(dat >> 8) + (dat << 8);
+            datap++;
+			  for( i=0;i<16;i++ )
+			  {
+            if((dat<<i) & 0x8000)
+					color = fc;
+				else
+					color = bc;
+
+				 push_pixel(color);
+			  }
+		  }
+   }
+   else
+   {
+         index = (bt - font->start_char)* 16 * 16;
+         for( j=0;j<16;j++ )
+         {
+            xo = x;
+            dat=*datap;
+            dat=(dat >> 8) + (dat << 8);
+            datap++;
+            for( i=0;i<16;i++ )
+            {
+               if((dat<<i) & 0x8000)
+					   color = fc;
+				   else
+					   color = bc;
+               gui->pset(xo,yo,color);
+               xo++;
+            }
+            yo++;
+         }
+   }
+}
 /* -------------------------------------------------------------------------------- */
 /* -- INTERNAL FUNCTIONS                                                         -- */
 /* -------------------------------------------------------------------------------- */

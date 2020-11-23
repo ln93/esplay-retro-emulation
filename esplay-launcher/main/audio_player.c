@@ -23,7 +23,7 @@
 #include <acodecs.h>
 
 #define MAX_FILENAME 40
-
+extern uint8_t batlevel;
 // TODO: Move these
 static AudioCodec choose_codec(FileType ftype)
 {
@@ -75,7 +75,7 @@ typedef enum PlayingMode
 	PlayingModeMax,
 } PlayingMode;
 
-static const char *playing_mode_str[PlayingModeMax] = {"Normal", "Repeat Song", "Repeat Playlist/Folder"};
+static const char *playing_mode_str[PlayingModeMax] = {"Normal", "Repeat Song", "Repeat All"};
 
 // Owned by player task, can only be modified/written to by player task
 typedef struct PlayerState
@@ -243,6 +243,7 @@ static PlayerResult play_song(const Song *const song)
 	PlayerState *state = &player_state;
 	AudioInfo info;
 	void *acodec = NULL;
+static unsigned int cou=0;
 
 	printf("Playing file: %s, codec: %d\n", song->filepath, song->codec);
 	AudioDecoder *decoder = acodec_get_decoder(song->codec);
@@ -284,6 +285,21 @@ static PlayerResult play_song(const Song *const song)
 	printf("starting to play audio...\n");
 	do
 	{
+
+		// 	cou++;
+		// if (cou>20)
+		// {
+		// 	cou=0;
+		// 	//draw_player(&player_state);
+		// 	if (batlevel>4) 
+		// 	{
+		// 		drawBattery(100);
+		// 	}
+		// 	else
+		// 	{
+		// 		drawBattery(batlevel*25);
+		// 	}
+		// }
 		// React on user control
 		if ((result = handle_cmd(state, info, player_poll_cmd())) != PlayerResultDone)
 		{
@@ -374,7 +390,7 @@ static void draw_player(const PlayerState *const state)
 {
 	ui_clear_screen();
 
-	renderGraphics((320 - 150) / 2, 0, 128, 416, 150, 23);
+	renderGraphics((320 - 150) / 2, 0, 128, 416, 38, 23);
 
 	UG_FontSelect(&FONT_8X12);
 
@@ -418,7 +434,7 @@ static void draw_player(const PlayerState *const state)
 	truncnm[MAX_FILENAME - 1] = 0;
 	snprintf(str_buf, 300, "Song: %s", truncnm);
 	UG_PutString(3, y, str_buf);
-	y += line_height;
+	y += 17;
 
 	// Song playmode
 	snprintf(str_buf, 300, "Playing Mode: %s", playing_mode_str[state->playing_mode]);
@@ -430,24 +446,24 @@ static void draw_player(const PlayerState *const state)
 	UG_PutString(3, y, str_buf);
 	y += line_height;
 
-	renderGraphics(10, y, 0, 439, 208, 106);
+	renderGraphics(10, y, 0, 439, 120, 106);
 
 	// Show Playing or paused/DAC on image
-	UG_PutString(222, y + 11, state->playing ? "Pause" : "Continue");
-	UG_PutString(222, y + 50, "Go Back");
-	UG_PutString(222, y + 89, speaker_on ? "Speaker off" : "Speaker on");
+	UG_PutString(160, y + 31, state->playing ? "A: Pause" : "A: Continue");
+	UG_PutString(160, y + 70, "B: Go Back");
+	//UG_PutString(222, y + 89, speaker_on ? "Speaker off" : "Speaker on");
 	y += 115;
 
 	// Explain start and stop button behaviour
-	UG_PutString(3, y, "SELECT: Toggle screen off");
+	//UG_PutString(3, y, "SELECT: Toggle screen off");
 	y += line_height + 3;
-	UG_PutString(3, y, "START: Cycle through Playing Mode");
+	//UG_PutString(3, y, "START: Cycle through Playing Mode");
 
 	ui_flush();
 }
 
 static void handle_keypress(event_keypad_t keys, bool *quit)
-{
+{	
 	if (!keys.last_state.values[GAMEPAD_INPUT_A] && keys.state.values[GAMEPAD_INPUT_A])
 		player_send_cmd(PlayerCmdPause);
 	if (!keys.last_state.values[GAMEPAD_INPUT_B] && keys.state.values[GAMEPAD_INPUT_B])
@@ -490,6 +506,7 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 		speaker_on ? audio_amp_enable() : audio_amp_disable();
 		draw_player(&player_state);
 	}
+
 }
 
 #define MAX_SONGS 1024
@@ -583,6 +600,8 @@ static void load_settings(PlayerState *state)
 
 int audio_player(AudioPlayerParam params)
 {
+		
+
 	event_init();
 	memset(&player_state, 0, sizeof(PlayerState));
 	load_settings(&player_state);
@@ -600,6 +619,7 @@ int audio_player(AudioPlayerParam params)
 	event_t event;
 	while (!quit)
 	{
+
 		// Handle inputs
 		if (wait_event(&event) < 0)
 		{
@@ -638,7 +658,7 @@ int audio_player(AudioPlayerParam params)
 	free_playlist(&player_state);
 	keys_locked = false;
 	event_deinit();
-	set_display_brightness(50);
+	//set_display_brightness(50);
 
 	return 0;
 }

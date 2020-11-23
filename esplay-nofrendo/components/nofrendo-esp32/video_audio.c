@@ -246,6 +246,8 @@ static void custom_blit(bitmap_t *bmp, int num_dirties, rect_t *dirty_rects)
 //This runs on core 1.
 volatile bool exitVideoTaskFlag = false;
 esplay_scale_option opt;
+extern uint8_t batlevel;
+
 static void videoTask(void *arg)
 {
     bitmap_t *bmp = NULL;
@@ -261,6 +263,7 @@ static void videoTask(void *arg)
         {
             //write_frame_rectangleLE(32,0,256,240,NULL);
             int ret = showMenu();
+            if (batlevel==0)ret=MENU_SAVE_EXIT;
             switch (ret)
             {
             case MENU_SAVE_STATE:
@@ -318,6 +321,7 @@ static void SaveState()
 {
     printf("Saving state.\n");
 
+    //if (save_sram())
     save_sram();
 
     printf("Saving state OK.\n");

@@ -11,7 +11,7 @@
 
 void drawBackground(int offset)
 {
-  renderGfx((320 - 150) / 2, offset, 150, 240 - offset - 1, menu_bg.pixel_data, 0, offset, menu_bg.width);
+  renderGfx((240 - 150) / 2, offset, 150, 192 - offset - 1, menu_bg.pixel_data, 0, offset, menu_bg.width);
 }
 
 void renderMenu(int dx, int dy, int sx, int sy, int sw, int sh)
@@ -44,7 +44,7 @@ int showMenu()
   int oldVol = 0;
   int br = 0;
   int oldBr = 0;
-
+  int pleaserefreshbar=1;
   audio_terminate();
   while (1)
   {
@@ -53,7 +53,11 @@ int showMenu()
     gamepad_read(&key);
 
     if (doRefresh)
-      drawBackground(top);
+    {
+        drawBackground(top);
+        pleaserefreshbar=1;
+    }
+    
 
     if (!lastKey.values[GAMEPAD_INPUT_DOWN] && key.values[GAMEPAD_INPUT_DOWN])
     {
@@ -145,32 +149,46 @@ int showMenu()
       top = 60;
 
     if (prevItem != menuItem)
+    {
       drawBackground(top);
+      pleaserefreshbar=1;
+    }
+      
 
     //Render arrows
     int t = xTaskGetTickCount() / (200 / portTICK_PERIOD_MS);
     t = (t & 1);
     if (t != oldArrowsTick)
     {
-      renderMenu(90, 29 * menuItem + 13, 65, t ? 0 : 15, 15, 15);
+      renderMenu(52, 24 * menuItem +3, 65, t ? 0 : 15, 15, 15);
       oldArrowsTick = t;
     }
 
     if (refreshArrow)
-      renderGfx((320 - 150) / 2, 0, 17, 240, menu_bg.pixel_data, 0, 0, menu_bg.width);
-
+      renderGfx((240 - 150) / 2, 0, 24, 192, menu_bg.pixel_data, 0, 0, menu_bg.width);   //x=(240 - 150) / 2
+    if (pleaserefreshbar)
+    {
+      pleaserefreshbar=0;
+      int32_t v;
+      settings_load(SettingAudioVolume, &v);
+        renderMenu(100, 7, 0, 8, 65, 8);
+        renderMenu(100, 7, 0, 0, (v * 65) / 100, 8);
+      settings_load(SettingBacklight, &v);
+        renderMenu(100, 31, 0, 8, 65, 8);
+        renderMenu(100, 31, 0, 0, (v * 65) / 100, 8);
+      }
     if (doRefresh)
     {
       int32_t v;
       settings_load(SettingAudioVolume, &v);
       if (top==0)
-        renderMenu(141, 15, 0, 8, 65, 8);
-      renderMenu(141, 15, 0, 0, (v * 65) / 100, 8);
+        renderMenu(100, 7, 0, 8, 65, 8);
+        renderMenu(100, 7, 0, 0, (v * 65) / 100, 8);
 
       settings_load(SettingBacklight, &v);
       if (top==30)
-        renderMenu(141, 45, 0, 8, 65, 8);
-      renderMenu(141, 45, 0, 0, (v * 65) / 100, 8);
+        renderMenu(100, 31, 0, 8, 65, 8);
+        renderMenu(100, 31, 0, 0, (v * 65) / 100, 8);
     }
 
     prevItem = menuItem;

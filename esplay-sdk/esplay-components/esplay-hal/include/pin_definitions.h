@@ -25,7 +25,7 @@
 #ifdef CONFIG_ESPLAY_MICRO_HW
 #define L_BTN   36
 #define R_BTN   34
-#define MENU    35
+//#define MENU    35
 #define I2C_SDA 21
 #define I2C_SCL 22
 #define I2C_ADDR 0x20

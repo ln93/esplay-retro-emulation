@@ -40,6 +40,7 @@ static void disp_spi_pre_transfer_callback(spi_transaction_t *t);
 /**********************
  *   GLOBAL FUNCTIONS
  **********************/
+
 void disp_spi_init(void)
 {
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[DISP_SPI_DC], PIN_FUNC_GPIO);
@@ -125,6 +126,11 @@ void send_lines_ext(int ypos, int xpos, int width, uint16_t *linedata, int lineC
     int x;
     static spi_transaction_t trans[6];
 
+#if _IS_KT
+    ypos=ypos+104;      //KT
+#else
+	ypos=ypos+40;
+#endif
     for (x = 0; x < 6; x++)
     {
         memset(&trans[x], 0, sizeof(spi_transaction_t));

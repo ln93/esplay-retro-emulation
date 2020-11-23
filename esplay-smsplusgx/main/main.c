@@ -27,7 +27,7 @@
 #include <dirent.h>
 
 int32_t scaleAlg;
-
+extern uint16_t freq;
 const char *SD_BASE_PATH = "/sd";
 
 #define AUDIO_SAMPLE_RATE (32000)
@@ -53,6 +53,8 @@ static void SaveState();
 
 volatile bool videoTaskIsRunning = false;
 esplay_scale_option opt;
+extern uint8_t batlevel;
+
 void videoTask(void *arg)
 {
     uint8_t *param;
@@ -74,6 +76,7 @@ void videoTask(void *arg)
             //write_frame_rectangleLE(32,0,256,240,NULL);
             int ret = showMenu();
             char *cartName = settings_load_str(SettingRomPath);
+            if (batlevel==0)ret=MENU_SAVE_EXIT;
             switch (ret)
             {
             case MENU_SAVE_STATE:
@@ -350,13 +353,14 @@ void app_main(void)
 
     // audio
     audio_init(AUDIO_SAMPLE_RATE);
-
+    freq=32000;
     // battery
     battery_level_init();
 
     // Boot state overrides
     bool forceConsoleReset = false;
 
+    display_init();
     display_prepare();
 
     switch (esp_sleep_get_wakeup_cause())
@@ -403,7 +407,7 @@ void app_main(void)
         break;
     }
 
-    display_init();
+    //display_init();
     int brightness;
     settings_load(SettingBacklight, &brightness);
     set_display_brightness(brightness);

@@ -9,20 +9,20 @@
 extern uint16_t myPalette[];
 extern uint16_t *line[];
 extern int32_t scaleAlg;
-
+extern uint8_t batlevel;
 #define LINE_COUNT (8)
-#define AVERAGE(a, b)   ( ((((a) ^ (b)) & 0xf7deU) >> 1) + ((a) & (b)) )
+#define AVERAGE(a, b) (((((a) ^ (b)) & 0xf7deU) >> 1) + ((a) & (b)))
 
-static uint8_t getPixelNes(const uint8_t *bufs, int x, int y, int w1, int h1, int w2, int h2, int x_ratio, int y_ratio)
+static uint16_t getPixelNes(const uint8_t *bufs, int x, int y, int w1, int h1, int w2, int h2, int x_ratio, int y_ratio)
 {
-    uint8_t col;
-    if(scaleAlg == NEAREST_NEIGHBOR)
+    uint16_t col;
+    if (scaleAlg == NEAREST_NEIGHBOR || scaleAlg == BILINIER_INTERPOLATION) //fuck yeah
     {
         /* Resize using nearest neighbor alghorithm */
         /* Simple and fastest way but low quality   */
-        int x2 = ((x*x_ratio)>>16);
-        int y2 = ((y*y_ratio)>>16);
-        col = bufs[(y2*w1)+x2];
+        int x2 = ((x * x_ratio) >> 16);
+        int y2 = ((y * y_ratio) >> 16);
+        col = myPalette[bufs[(y2 * w1) + x2]];
 
         return col;
     }
@@ -35,24 +35,26 @@ static uint8_t getPixelNes(const uint8_t *bufs, int x, int y, int w1, int h1, in
         xv = (int)((x_ratio * x) >> 16);
         yv = (int)((y_ratio * y) >> 16);
 
-        x_diff = ((x_ratio * x) >> 16) - (xv);
-        y_diff = ((y_ratio * y) >> 16) - (yv);
-
+        y_diff = (y_ratio * y) - (yv << 16);
+        x_diff = (x_ratio * x) - (xv << 16);
         index = yv * w1 + xv;
 
-        a = bufs[index];
-        b = bufs[index + 1];
-        c = bufs[index + w1];
-        d = bufs[index + w1 + 1];
+        a = myPalette[bufs[index]];
+        b = myPalette[bufs[index + 1]];
+        c = myPalette[bufs[index + w1]];
+        d = myPalette[bufs[index + w1 + 1]];
 
-        red = (((a >> 11) & 0x1f) * (1 - x_diff) * (1 - y_diff) + ((b >> 11) & 0x1f) * (x_diff) * (1 - y_diff) +
-            ((c >> 11) & 0x1f) * (y_diff) * (1 - x_diff) + ((d >> 11) & 0x1f) * (x_diff * y_diff));
+        red = (((a >> 11) & 0x1f) * (4 - (x_diff >> 14)) * (4 - (y_diff >> 14)) + ((b >> 11) & 0x1f) * (x_diff >> 14) * (4 - (y_diff >> 14)) +
+               ((c >> 11) & 0x1f) * (y_diff >> 14) * (4 - (x_diff >> 14)) + ((d >> 11) & 0x1f) * ((x_diff >> 14) * (y_diff >> 14)));
+        red = (red >> 4);
 
-        green = (((a >> 5) & 0x3f) * (1 - x_diff) * (1 - y_diff) + ((b >> 5) & 0x3f) * (x_diff) * (1 - y_diff) +
-                ((c >> 5) & 0x3f) * (y_diff) * (1 - x_diff) + ((d >> 5) & 0x3f) * (x_diff * y_diff));
+        green = (((a >> 5) & 0x3f) * (4 - (x_diff >> 14)) * (4 - (y_diff >> 14)) + ((b >> 5) & 0x3f) * (x_diff >> 14) * (4 - (y_diff >> 14)) +
+                 ((c >> 5) & 0x3f) * (y_diff >> 14) * (4 - (x_diff >> 14)) + ((d >> 5) & 0x3f) * ((x_diff >> 14) * (y_diff >> 14)));
+        green = (green >> 4);
 
-        blue = (((a)&0x1f) * (1 - x_diff) * (1 - y_diff) + ((b)&0x1f) * (x_diff) * (1 - y_diff) +
-                ((c)&0x1f) * (y_diff) * (1 - x_diff) + ((d)&0x1f) * (x_diff * y_diff));
+        blue = (((a)&0x1f) * (4 - (x_diff >> 14)) * (4 - (y_diff >> 14)) + ((b)&0x1f) * (x_diff >> 14) * (4 - (y_diff >> 14)) +
+                ((c)&0x1f) * (y_diff >> 14) * (4 - (x_diff >> 14)) + ((d)&0x1f) * ((x_diff >> 14) * (y_diff >> 14)));
+        blue = (blue >> 4);
 
         col = ((int)red << 11) | ((int)green << 5) | ((int)blue);
 
@@ -68,15 +70,15 @@ static uint8_t getPixelNes(const uint8_t *bufs, int x, int y, int w1, int h1, in
 
         index = yv * w1 + xv;
 
-        a = bufs[index];
-        b = bufs[index + 1];
-        c = bufs[index + w1];
-        d = bufs[index + w1 + 1];
+        a = myPalette[bufs[index]];
+        b = myPalette[bufs[index + 1]];
+        c = myPalette[bufs[index + w1]];
+        d = myPalette[bufs[index + w1 + 1]];
 
-        p = AVERAGE(a,b);
-        q = AVERAGE(c,d);
+        p = AVERAGE(a, b);
+        q = AVERAGE(c, d);
 
-        col = AVERAGE(p,q);
+        col = AVERAGE(p, q);
 
         return col;
     }
@@ -87,7 +89,17 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
     short x, y, xpos, ypos, outputWidth, outputHeight;
     int sending_line = -1;
     int calc_line = 0;
+    int temp1, temp2;
     int x_ratio, y_ratio;
+    static const unsigned char *pbat;
+    if (batlevel > 4)
+    {
+        pbat = &bat[24 * 16 * 2 * 0];
+    }
+    else
+    {
+        pbat = &bat[24 * 16 * 2 * (5 - batlevel)]; //0 1 2 3 4
+    }
 
     if (data == NULL)
     {
@@ -110,13 +122,13 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
         switch (scale)
         {
         case SCALE_NONE:
-            /* place output on center of lcd */
-            outputHeight = NES_FRAME_HEIGHT;
-            outputWidth = NES_FRAME_WIDTH;
+            outputHeight = LCD_HEIGHT;
+            outputWidth = 220;
             xpos = (LCD_WIDTH - outputWidth) / 2;
-            ypos = (LCD_HEIGHT - outputHeight) / 2;
+            x_ratio = (int)((NES_FRAME_WIDTH << 16) / outputWidth) + 1;
+            y_ratio = (int)((NES_FRAME_HEIGHT << 16) / outputHeight) + 1;
 
-            for (y = ypos; y < outputHeight; y += LINE_COUNT)
+            for (y = 0; y < outputHeight; y += LINE_COUNT)
             {
                 for (int i = 0; i < LINE_COUNT; ++i)
                 {
@@ -124,11 +136,33 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
                         break;
 
                     int index = (i)*outputWidth;
-                    int bufferIndex = ((y + i) * NES_FRAME_WIDTH);
 
-                    for (x = 0; x < outputWidth; x++)
+                    if (y < 9)
                     {
-                        line[calc_line][index++] = myPalette[(unsigned char)(data[bufferIndex++])];
+                        for (x = 0; x < (outputWidth - 24); x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
+                        for (x = (outputWidth - 24); x < outputWidth; x++)
+                        {
+                            temp1 = *pbat++;
+                            temp2 = (temp1 << 8) + *pbat++;
+                            if (temp2 == 0)
+                            {
+                                line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                            }
+                            else
+                            {
+                                line[calc_line][index++] = temp2;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (x = 0; x < outputWidth; x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
                     }
                 }
                 if (sending_line != -1)
@@ -143,8 +177,8 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
         case SCALE_STRETCH:
             outputHeight = LCD_HEIGHT;
             outputWidth = LCD_WIDTH;
-            x_ratio = (int)((NES_FRAME_WIDTH<<16)/outputWidth) +1;
-            y_ratio = (int)((NES_FRAME_HEIGHT<<16)/outputHeight) +1;
+            x_ratio = (int)((NES_FRAME_WIDTH << 16) / outputWidth) + 1;
+            y_ratio = (int)((NES_FRAME_HEIGHT << 16) / outputHeight) + 1;
 
             for (y = 0; y < outputHeight; y += LINE_COUNT)
             {
@@ -154,10 +188,32 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
                         break;
 
                     int index = (i)*outputWidth;
-
-                    for (x = 0; x < outputWidth; x++)
+                    if (y < 9)
                     {
-                        line[calc_line][index++] = myPalette[getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio)];
+                        for (x = 0; x < (outputWidth - 24); x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
+                        for (x = (outputWidth - 24); x < outputWidth; x++)
+                        {
+                            temp1 = *pbat++;
+                            temp2 = (temp1 << 8) + *pbat++;
+                            if (temp2 == 0)
+                            {
+                                line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                            }
+                            else
+                            {
+                                line[calc_line][index++] = temp2;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (x = 0; x < outputWidth; x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
                     }
                 }
                 if (sending_line != -1)
@@ -171,10 +227,10 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
 
         default:
             outputHeight = LCD_HEIGHT;
-            outputWidth = NES_FRAME_WIDTH + (LCD_HEIGHT - NES_FRAME_HEIGHT);
+            outputWidth = 220;
             xpos = (LCD_WIDTH - outputWidth) / 2;
-            x_ratio = (int)((NES_FRAME_WIDTH<<16)/outputWidth) +1;
-            y_ratio = (int)((NES_FRAME_HEIGHT<<16)/outputHeight) +1;
+            x_ratio = (int)((NES_FRAME_WIDTH << 16) / outputWidth) + 1;
+            y_ratio = (int)((NES_FRAME_HEIGHT << 16) / outputHeight) + 1;
 
             for (y = 0; y < outputHeight; y += LINE_COUNT)
             {
@@ -185,9 +241,32 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
 
                     int index = (i)*outputWidth;
 
-                    for (x = 0; x < outputWidth; x++)
+                    if (y < 9)
                     {
-                        line[calc_line][index++] = myPalette[getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio)];
+                        for (x = 0; x < (outputWidth - 24); x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
+                        for (x = (outputWidth - 24); x < outputWidth; x++)
+                        {
+                            temp1 = *pbat++;
+                            temp2 = (temp1 << 8) + *pbat++; //temp2=temp1+((*pbat++) << 8);
+                            if (temp2 == 0)
+                            {
+                                line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                            }
+                            else
+                            {
+                                line[calc_line][index++] = temp2;
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (x = 0; x < outputWidth; x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
                     }
                 }
                 if (sending_line != -1)

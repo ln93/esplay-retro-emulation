@@ -46,10 +46,10 @@ char scaling_alg_text[3][20] = {"Nearest Neighbor", "Bilinier Intrp.", "Box Filt
 int32_t wifi_en = 0;
 int32_t volume = 25;
 int32_t bright = 50;
-int32_t scaling = SCALE_FIT;
-int32_t scale_alg = NEAREST_NEIGHBOR;
-
-
+int32_t scaling = SCALE_STRETCH;
+int32_t scale_alg = BILINIER_INTERPOLATION;
+extern uint16_t freq;
+extern const unsigned char fontzn[261696];
 esp_err_t start_file_server(const char *base_path);
 
 esp_err_t event_handler(void *ctx, system_event_t *event)
@@ -57,20 +57,21 @@ esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-static void handleCharging() {
-	int r;
-	int fullCtr=0;
-	//The LiIon charger sometimes goes back from 'full' to 'charging', which is
-	//confusing to the end user. This variable becomes true if the LiIon has indicated 'full'
-	//for a while, and it being true causes the 'full' icon to always show.
-	int fixFull=0;
+static void handleCharging()
+{
+    int r;
+    int fullCtr = 0;
+    //The LiIon charger sometimes goes back from 'full' to 'charging', which is
+    //confusing to the end user. This variable becomes true if the LiIon has indicated 'full'
+    //for a while, and it being true causes the 'full' icon to always show.
+    int fixFull = 0;
 
-	//Force brightness low to decrease chance of burn-in
-	set_display_brightness(30);
-	printf("Detected charger.\n");
+    //Force brightness low to decrease chance of burn-in
+    set_display_brightness(30);
+    printf("Detected charger.\n");
+    /*
 	guiCharging(0);
 
-	//Speed down
 	rtc_clk_cpu_freq_set(RTC_CPU_FREQ_2M);
     input_gamepad_state prevKey;
     gamepad_read(&prevKey);
@@ -99,44 +100,48 @@ static void handleCharging() {
 		vTaskDelay(1);
         prevKey = key;
 	} while (r!=NO_CHRG);
-
+    */
     rtc_clk_cpu_freq_set(RTC_CPU_FREQ_240M);
 }
 
 static void drawHomeScreen()
 {
     ui_clear_screen();
+    UG_FillFrame(0, 26, 239, 191, C_WHITE_SMOKE);
+    ;
     UG_SetForecolor(C_YELLOW);
     UG_SetBackcolor(C_BLACK);
-    char *title = "ESPlay Micro";
-    UG_PutString((320 / 2) - (strlen(title) * 9 / 2), 12, title);
+    char *title = "ESP32 Mini";
+    UG_PutString((240 / 2) - (strlen(title) * 9 / 2), 12, title);
 
     if (wifi_en)
     {
-        title = "Wifi ON, go to http://192.168.4.1/";
-        UG_PutString((320 / 2) - (strlen(title) * 9 / 2), 32, title);
+        UG_SetForecolor(C_DARK_BLUE);
+        UG_SetBackcolor(C_WHITE_SMOKE);
+        title = "Wifi ON,http://192.168.4.1";
+        UG_PutString(0, 32, title);
     }
 
-    UG_SetForecolor(C_WHITE);
-    UG_SetBackcolor(C_BLACK);
-    UG_PutString(40, 50 + (56 * 2) + 13, "    Browse");
-    UG_PutString(40, 50 + (56 * 2) + 13 + 18, "  Select");
-    UG_PutString(160, 50 + (56 * 2) + 13, "  Resume");
-    UG_PutString(160, 50 + (56 * 2) + 13 + 18, "     Options");
+    UG_SetForecolor(C_DARK_BLUE);
+    UG_SetBackcolor(C_WHITE_SMOKE);
+    UG_PutString(40, 50 + (56 * 2) + 13 - 25, "    Browse");
+    UG_PutString(160, 50 + (56 * 2) + 13 - 25, "  Select");
+    UG_PutString(160, 50 + (56 * 2) + 13 + 18 - 25, "  Resume");
+    UG_PutString(40, 50 + (56 * 2) + 13 + 18 - 25, "    Options");
 
-    UG_SetForecolor(C_BLACK);
-    UG_SetBackcolor(C_WHITE);
-    UG_FillRoundFrame(35, 50 + (56 * 2) + 13 - 1, 48 + (2 * 9) + 3, 50 + (56 * 2) + 13 + 11, 7, C_WHITE);
-    UG_PutString(40, 50 + (56 * 2) + 13, "< >");
+    UG_SetForecolor(C_WHITE_SMOKE);
+    UG_SetBackcolor(C_DARK_BLUE);
+    UG_FillRoundFrame(35, 50 + (56 * 2) + 13 - 1 - 25, 48 + (2 * 9) + 3, 50 + (56 * 2) + 13 + 11 - 25, 7, C_DARK_BLUE);
+    UG_PutString(40, 50 + (56 * 2) + 13 - 25, "< >");
 
-    UG_FillCircle(43, 50 + (56 * 2) + 13 + 18 + 5, 7, C_WHITE);
-    UG_PutString(40, 50 + (56 * 2) + 13 + 18, "A");
+    UG_FillCircle(163, 50 + (56 * 2) + 13 + 5 - 25, 7, C_DARK_BLUE);
+    UG_PutString(160, 50 + (56 * 2) + 13 - 25, "A");
 
-    UG_FillCircle(163, 50 + (56 * 2) + 13 + 5, 7, C_WHITE);
-    UG_PutString(160, 50 + (56 * 2) + 13, "B");
+    UG_FillCircle(163, 50 + (56 * 2) + 13 + 18 + 5 - 25, 7, C_DARK_BLUE);
+    UG_PutString(160, 50 + (56 * 2) + 13 + 18 - 25, "B");
 
-    UG_FillRoundFrame(155, 50 + (56 * 2) + 13 + 18 - 1, 168 + (3 * 9) + 3, 50 + (56 * 2) + 13 + 18 + 11, 7, C_WHITE);
-    UG_PutString(160, 50 + (56 * 2) + 13 + 18, "MENU");
+    UG_FillRoundFrame(35 - 9, 50 + (56 * 2) + 13 + 18 - 1 - 25, 48 + (3 * 9) + 3 - 9, 50 + (56 * 2) + 13 + 18 + 11 - 25, 7, C_DARK_BLUE);
+    UG_PutString(40 - 9, 50 + (56 * 2) + 13 + 18 - 25, "MENU");
 
     uint8_t volume = 25;
     settings_load(SettingAudioVolume, &volume);
@@ -157,7 +162,9 @@ static void drawHomeScreen()
     drawVolume(volume);
     drawBattery(bat_state.percentage);
     if (wifi_en)
+    {
         renderGraphics(320 - (50), 0, 24 * 7, 0, 24, 24);
+    }
 }
 
 // Return to last emulator if 'B' pressed....
@@ -166,35 +173,6 @@ static int resume(void)
     int i;
     char *extension;
     char *romPath = settings_load_str(SettingRomPath);
-
-    printf("trying to resume...\n");
-    if (romPath)
-    {
-        extension = system_util_GetFileExtenstion(romPath);
-        for (i = 0; i < strlen(extension); i++)
-            extension[i] = extension[i + 1];
-        printf("extension=%s\n", extension);
-    }
-    else
-    {
-        printf("can't resume!\n");
-        return (0);
-    }
-    for (i = 0; i < NUM_EMULATOR; i++)
-    {
-        if (strcmp(extension, &emu_dir[i][0]) == 0)
-        {
-            printf("resume - extension=%s, slot=%i\n", extension, i);
-            system_application_set(emu_slot[i]); // set emulator slot
-            ui_clear_screen();
-            ui_flush();
-            display_show_hourglass();
-            esp_restart(); // reboot!
-        }
-    }
-    free(romPath);
-    free(extension);
-
     return (0); // nope!
 }
 
@@ -202,42 +180,42 @@ static void showOptionPage(int selected)
 {
     ui_clear_screen();
     /* Header */
-    UG_FillFrame(0, 0, 320 - 1, 16 - 1, C_BLUE);
+    UG_FillFrame(0, 0, 240 - 1, 16 - 1, C_BLUE);
     UG_SetForecolor(C_WHITE);
     UG_SetBackcolor(C_BLUE);
     char *msg = "Device Options";
-    UG_PutString((320 / 2) - (strlen(msg) * 9 / 2), 2, msg);
+    //UG_PutString((240 / 2) - (strlen(msg) * 9 / 2), 2, msg);
     /* End Header */
 
     /* Footer */
-    UG_FillFrame(0, 240 - 16 - 1, 320 - 1, 240 - 1, C_BLUE);
+    UG_FillFrame(0, 192 - 16 - 1, 240 - 1, 192 - 1, C_BLUE);
     UG_SetForecolor(C_WHITE);
     UG_SetBackcolor(C_BLUE);
     msg = "     Browse      Change       ";
-    UG_PutString((320 / 2) - (strlen(msg) * 9 / 2), 240 - 15, msg);
+    //UG_PutString((240 / 2) - (strlen(msg) * 9 / 2), 192 - 15, msg);
 
-    UG_FillRoundFrame(15, 240 - 15 - 1, 15 + (5 * 9) + 8, 237, 7, C_WHITE);
-    UG_SetForecolor(C_BLACK);
-    UG_SetBackcolor(C_WHITE);
-    UG_PutString(20, 240 - 15, "Up/Dn");
+    UG_FillRoundFrame(15, 192 - 15 - 1, 15 + (5 * 9) + 8, 237, 7, C_BLUE);
+    UG_SetForecolor(C_WHITE);
+    UG_SetBackcolor(C_BLUE);
+    //UG_PutString(20, 192 - 15, "Up/Dn");
 
-    UG_FillRoundFrame(140, 240 - 15 - 1, 140 + (3 * 9) + 8, 237, 7, C_WHITE);
-    UG_PutString(145, 240 - 15, "< >");
+    UG_FillRoundFrame(140, 192 - 15 - 1, 140 + (3 * 9) + 8, 237, 7, C_BLUE);
+    //UG_PutString(145, 192 - 15, "< >");
     /* End Footer */
 
-    UG_FillFrame(0, 16, 320 - 1, 240 - 20, C_BLACK);
+    UG_FillFrame(0, 16, 240 - 1, 192 - 20, C_BLACK);
 
     UG_SetForecolor(C_RED);
     UG_SetBackcolor(C_BLACK);
-    UG_PutString(0, 240 - 30, "* restart required");
+    //UG_PutString(0, 192 - 30, "* restart required");
     esp_app_desc_t *desc = esp_ota_get_app_description();
     char idfVer[512];
     sprintf(idfVer, "IDF %s", desc->idf_ver);
     UG_SetForecolor(C_WHITE);
     UG_SetBackcolor(C_BLACK);
-    UG_PutString(0, 240 - 72, desc->project_name);
-    UG_PutString(0, 240 - 58, desc->version);
-    UG_PutString(0, 240 - 44, idfVer);
+    //UG_PutString(0, 240 - 72, desc->project_name);
+    //UG_PutString(0, 240 - 58, desc->version);
+    //UG_PutString(0, 240 - 44, idfVer);
 
     for (int i = 0; i < num_menu; i++)
     {
@@ -254,28 +232,28 @@ static void showOptionPage(int selected)
         {
         case 0:
             if (i == selected)
-                ui_display_switch(307, top, wifi_en, C_YELLOW, C_BLUE, C_GRAY);
+                ui_display_switch(192 - 13, top, wifi_en, C_YELLOW, C_BLUE, C_GRAY);
             else
-                ui_display_switch(307, top, wifi_en, C_WHITE, C_BLUE, C_GRAY);
+                ui_display_switch(192 - 13, top, wifi_en, C_WHITE, C_BLUE, C_GRAY);
             break;
         case 1:
             if (i == selected)
-                ui_display_seekbar((320 - 103), top + 4, 100, (volume * 100) / 100, C_YELLOW, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (volume * 100) / 100, C_YELLOW, C_RED);
             else
-                ui_display_seekbar((320 - 103), top + 4, 100, (volume * 100) / 100, C_WHITE, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (volume * 100) / 100, C_WHITE, C_RED);
             break;
         case 2:
             if (i == selected)
-                ui_display_seekbar((320 - 103), top + 4, 100, (bright * 100) / 100, C_YELLOW, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (bright * 100) / 100, C_YELLOW, C_RED);
             else
-                ui_display_seekbar((320 - 103), top + 4, 100, (bright * 100) / 100, C_WHITE, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (bright * 100) / 100, C_WHITE, C_RED);
             break;
         case 3:
-            UG_PutString(319 - (strlen(scaling_text[scaling]) * 9), top, scaling_text[scaling]);
+            UG_PutString(239 - (strlen(scaling_text[scaling]) * 9), top, scaling_text[scaling]);
             break;
 
         case 4:
-            UG_PutString(319 - (strlen(scaling_alg_text[scale_alg]) * 9), top, scaling_alg_text[scale_alg]);
+            UG_PutString(239 - (strlen(scaling_alg_text[scale_alg]) * 9), top, scaling_alg_text[scale_alg]);
             break;
 
         default:
@@ -316,7 +294,7 @@ static int showOption()
             switch (selected)
             {
             case 0:
-                wifi_en = ! wifi_en;
+                wifi_en = !wifi_en;
                 settings_save(SettingWifi, (int32_t)wifi_en);
                 break;
             case 1:
@@ -408,13 +386,24 @@ static int showOption()
 
 //----------------------------------------------------------------
 void app_main(void)
-{
+{ //char m=9;
+    //   m=m+font1.height+font1.pixel_data[3]+font2.height+font2.pixel_data[3]+font3.height+font3.pixel_data[3]+font4.height+font4.pixel_data[3]+font5.height+font5.pixel_data[3];
+    //   if (m==8)
+    //       m=m+font1.height+font1.pixel_data[5]
+    //   else
+    //   {
+    //       /* code */
+    //   }
+
+    //   printf("the value is %d.--kelly\n",m);
+
     settings_init();
     esplay_system_init();
 
     audio_init(44100);
+    freq = 44100;
     audio_amp_disable();
-
+    printf("\nReady, system init \n");
     gamepad_init();
 
     // Display
@@ -442,26 +431,27 @@ void app_main(void)
         abort();
     }
 
-    if (esp_reset_reason() == ESP_RST_POWERON)
-        display_show_splash();
+    //  printf("dat is %d, %d, %d, %d, %d, %d, %d,  %d ",fontzn[261688],fontzn[261689],fontzn[261690],fontzn[261691],fontzn[261692],fontzn[261693],fontzn[261694],fontzn[261695]);
+    //   if (esp_reset_reason() == ESP_RST_POWERON)
+    //       display_show_splash();
 
     sdcard_open("/sd"); // map SD card.
 
     ui_init();
-    charging_state st = getChargeStatus();
-    if (st == CHARGING)
-        handleCharging();
+    //   charging_state st = getChargeStatus();
+    //  if (st == CHARGING)
+    //       handleCharging();
 
     UG_FontSelect(&FONT_8X12);
-    if(settings_load(SettingWifi, &wifi_en) != 0)
+    if (settings_load(SettingWifi, &wifi_en) != 0)
         settings_save(SettingWifi, (int32_t)wifi_en);
-    if(settings_load(SettingAudioVolume, &volume) != 0)
+    if (settings_load(SettingAudioVolume, &volume) != 0)
         settings_save(SettingAudioVolume, (int32_t)volume);
-    if(settings_load(SettingBacklight, &bright) != 0)
+    if (settings_load(SettingBacklight, &bright) != 0)
         settings_save(SettingBacklight, (int32_t)bright);
-    if(settings_load(SettingScaleMode, &scaling) != 0)
+    if (settings_load(SettingScaleMode, &scaling) != 0)
         settings_save(SettingScaleMode, (int32_t)scaling);
-    if(settings_load(SettingAlg, &scale_alg) != 0)
+    if (settings_load(SettingAlg, &scale_alg) != 0)
         settings_save(SettingAlg, (int32_t)scale_alg);
 
     if (wifi_en)
@@ -474,7 +464,7 @@ void app_main(void)
         ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_AP));
         wifi_config_t ap_config = {
             .ap = {
-                .ssid = "esplay",
+                .ssid = "esp32 Mini",
                 .authmode = WIFI_AUTH_OPEN,
                 .max_connection = 2,
                 .beacon_interval = 200}};
@@ -504,18 +494,20 @@ void app_main(void)
     charging_state chrg_st = getChargeStatus();
     input_gamepad_state prevKey;
     gamepad_read(&prevKey);
+    gamepad_read(&prevKey);
+    //    printf("first time read key is %d \n",prevKey.values[GAMEPAD_INPUT_MENU]);
     while (1)
     {
         input_gamepad_state joystick;
         gamepad_read(&joystick);
-        if (!prevKey.values[GAMEPAD_INPUT_LEFT] && joystick.values[GAMEPAD_INPUT_LEFT] && !scroll)
+        if (!prevKey.values[GAMEPAD_INPUT_RIGHT] && joystick.values[GAMEPAD_INPUT_RIGHT] && !scroll)
         {
             menuItem++;
             if (menuItem > NUM_EMULATOR - 1)
                 menuItem = 0;
             scroll = -SCROLLSPD;
         }
-        if (!prevKey.values[GAMEPAD_INPUT_RIGHT] && joystick.values[GAMEPAD_INPUT_RIGHT] && !scroll)
+        if (!prevKey.values[GAMEPAD_INPUT_LEFT] && joystick.values[GAMEPAD_INPUT_LEFT] && !scroll)
         {
             menuItem--;
             if (menuItem < 0)
@@ -526,17 +518,17 @@ void app_main(void)
             scroll += SCROLLSPD;
         if (scroll < 0)
             scroll -= SCROLLSPD;
-        if (scroll > 320 || scroll < -320)
+        if (scroll > 240 || scroll < -240)
         {
             prevItem = menuItem;
             scroll = 0;
             doRefresh = 1;
         }
         if (prevItem != menuItem)
-            renderGraphics(scroll, 78, 0, (56 * prevItem) + 24, 320, 56);
+            renderGraphics(scroll, 78, 40, (56 * prevItem) + 24, 240, 56);
         if (scroll)
         {
-            renderGraphics(scroll + ((scroll > 0) ? -320 : 320), 78, 0, (56 * menuItem) + 24, 320, 56);
+            renderGraphics(scroll + ((scroll > 0) ? -240 : 240), 78, 40, (56 * menuItem) + 24, 240, 56);
             doRefresh = 1;
             lastUpdate = 0;
         }
@@ -552,19 +544,20 @@ void app_main(void)
                     strcat(path, emu_dir[menuItem]);
                     int count = sdcard_get_files_count(path);
                     char text[320];
+                    UG_SetForecolor(C_DARK_BLUE);
+                    UG_SetBackcolor(C_WHITE_SMOKE);
                     sprintf(text, "%i games available", count);
-                    UG_FillFrame(0, 64, 319, 76, C_BLACK);
-                    UG_PutString((320 / 2) - (strlen(text) * 9 / 2), 64, text);
-                    renderGraphics(0, 78, 0, (56 * menuItem) + 24, 320, 56);
+                    UG_FillFrame(0, 64, 239, 76, C_WHITE_SMOKE);
+                    UG_PutString((240 / 2) - (strlen(text) * 9 / 2), 64, text);
+                    renderGraphics(0, 78, 40, (56 * menuItem) + 24, 240, 56);
                 }
                 else
                 {
-                    UG_FillFrame(0, 64, 319, 76, C_BLACK);
-                    renderGraphics(0, 78, 0, (56 * menuItem) + 24, 320, 56);
+                    UG_FillFrame(0, 64, 239, 76, C_WHITE_SMOKE);
+                    renderGraphics(0, 78, 40, (56 * menuItem) + 24, 240, 56);
                 }
 
-                    lastUpdate = update;
-
+                lastUpdate = update;
             }
             //Render arrows
             int t = xTaskGetTickCount() / (400 / portTICK_PERIOD_MS);
@@ -573,7 +566,7 @@ void app_main(void)
             {
                 doRefresh = 1;
                 renderGraphics(10, 90, t ? 0 : 32, 416, 32, 23);
-                renderGraphics(276, 90, t ? 64 : 96, 416, 32, 23);
+                renderGraphics(200, 90, t ? 64 : 96, 416, 32, 23);
                 oldArrowsTick = t;
             }
         }
@@ -622,7 +615,7 @@ void app_main(void)
         }
         if (!prevKey.values[GAMEPAD_INPUT_B] && joystick.values[GAMEPAD_INPUT_B])
             resume();
-
+        //       printf("read key is %d \n",joystick.values[GAMEPAD_INPUT_MENU]);
         if (!prevKey.values[GAMEPAD_INPUT_MENU] && joystick.values[GAMEPAD_INPUT_MENU])
         {
             int r = showOption();
@@ -634,12 +627,12 @@ void app_main(void)
             doRefresh = 1;
         }
 
-        if (getChargeStatus() != chrg_st)
+        //if (getChargeStatus() != chrg_st)
         {
             battery_level_read(&bat_state);
             drawBattery(bat_state.percentage);
             doRefresh = 1;
-            chrg_st = getChargeStatus();
+            //chrg_st = getChargeStatus();
         }
 
         if (doRefresh)

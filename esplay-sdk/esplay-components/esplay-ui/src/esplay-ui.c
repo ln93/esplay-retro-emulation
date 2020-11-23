@@ -9,15 +9,16 @@
 #include "gamepad.h"
 #include "esplay-ui.h"
 
-#define MAX_CHR (320 / 9)
-#define MAX_ITEM (193 / 15) // 193 = LCD Height (240) - header(16) - footer(16) - char height (15)
+
+#define MAX_CHR (240 / 9)
+#define MAX_ITEM 8  //(145 / 15) // 193 = LCD Height (240) - header(16) - footer(16) - char height (15)
 
 uint16_t *fb;
 static UG_GUI *ugui;
 
 static void pset(UG_S16 x, UG_S16 y, UG_COLOR color)
 {
-  fb[y * 320 + x] = color;
+  fb[y * 240 + x] = color;
 }
 
 uint16_t * ui_get_fb()
@@ -27,19 +28,19 @@ uint16_t * ui_get_fb()
 
 void ui_clear_screen()
 {
-  memset(fb, 0, 320 * 240 * 2);
+  memset(fb, 0, 240 * 240 * 2);
 }
 
 void ui_flush()
 {
-  write_frame_rectangleLE(0, 0, 320, 240, fb);
+  write_frame_rectangleLE(0, 0, 240, 192, fb);
 }
 
 void ui_init()
 {
-  fb = malloc(320 * 240 * sizeof(uint16_t));
+  fb = malloc(240 * 192 * sizeof(uint16_t));
   ugui = malloc(sizeof(UG_GUI));
-  UG_Init(ugui, pset, 320, 240);
+  UG_Init(ugui, pset, 240, 192);
   UG_FontSelect(&FONT_8X12);
   ui_clear_screen();
   ui_flush();
@@ -112,13 +113,16 @@ void ui_display_switch(int x, int y, int state, UG_COLOR backColor, UG_COLOR ena
 static int cut_file_name(char *filename){
 
 	char *dot = strrchr(filename,'.');
-	char *brack1 = strchr(filename,'[');
-	char *brack2 = strchr(filename,'(');
+	char *brack1 = strchr(filename,'(');
+	char *brack2 = strchr(filename,'[');
 
 	int len = strlen(filename);
+
+
 	if(dot!=NULL && dot-filename<len ){
 		len = dot-filename;
 	}
+  
 	if(brack1!=NULL && brack1-filename<len ){
 		len = brack1-filename;
 		if(filename[len-1]==' '){
@@ -131,54 +135,36 @@ static int cut_file_name(char *filename){
 			len--;
 		}
 	}
+  
+  
 	return len;
 }
 
 static void ui_draw_page_list(char **files, int fileCount, int currentItem, int extLen, char *title)
 {
   /* Header */
-  UG_FillFrame(0, 0, 320 - 1, 16 - 1, C_BLUE);
+  UG_FillFrame(0, 0, 240 - 1, 16 - 1, C_BLUE);
   UG_SetForecolor(C_WHITE);
   UG_SetBackcolor(C_BLUE);
   char *msg = title;
-  UG_PutString((320 / 2) - (strlen(msg) * 9 / 2), 2, msg);
+  UG_PutString((240 / 2) - (strlen(msg) * 9 / 2), 2, msg);
   /* End Header */
 
-  /* Footer */
-  UG_FillFrame(0, 240 - 16 - 1, 320 - 1, 240 - 1, C_BLUE);
-  UG_SetForecolor(C_WHITE);
-  UG_SetBackcolor(C_BLUE);
-  msg = "  Load    Back    PgUp    PgDown";
-  UG_PutString((320 / 2) - (strlen(msg) * 9 / 2), 240 - 15, msg);
+  UG_FillFrame(0, 16, 240 - 1, 192 - 1, C_BLACK);
 
-  UG_FillCircle(22, 240 - 10, 7, C_WHITE);
-  UG_SetForecolor(C_BLACK);
-  UG_SetBackcolor(C_WHITE);
-  UG_PutString(20, 240 - 15, "A");
-
-  UG_FillCircle(95, 240 - 10, 7, C_WHITE);
-  UG_PutString(92, 240 - 15, "B");
-
-  UG_FillCircle(168, 240 - 10, 7, C_WHITE);
-  UG_PutString(165, 240 - 15, "<");
-
-  UG_FillCircle(240, 240 - 10, 7, C_WHITE);
-  UG_PutString(237, 240 - 15, ">");
-  /* End Footer */
-
-  const int innerHeight = 193;
+  const int innerHeight = 176;
   int page = currentItem / MAX_ITEM;
   page *= MAX_ITEM;
   const int itemHeight = innerHeight / MAX_ITEM;
 
-  UG_FillFrame(0, 15, 320 - 1, 193 + 15, C_BLACK);
+  UG_FillFrame(0, 15, 240 - 1, 145 + 15, C_BLACK);
 
   if (fileCount < 1)
   {
     UG_SetForecolor(C_RED);
     UG_SetBackcolor(C_BLACK);
     msg = "No Files Found";
-    UG_PutString((320 / 2) - (strlen(msg) * 9 / 2), (240 - 16 - 13) / 2, msg);
+    UG_PutString((320 / 2) - (strlen(msg) * 9 / 2), (192 - 16 - 13) / 2, msg);
     ui_flush();
   }
   else
@@ -196,7 +182,7 @@ static void ui_draw_page_list(char **files, int fileCount, int currentItem, int 
       short top = 19 + (line * itemHeight) - 1;
       if ((page) + line == currentItem)
       {
-        UG_FillFrame(0, top - 1, 320 - 1, top + 12 + 1, C_YELLOW);
+        UG_FillFrame(0, top - 1, 240 - 1, top + 20 + 1, C_YELLOW);
         UG_SetForecolor(C_BLACK);
         UG_SetBackcolor(C_YELLOW);
       }
@@ -216,7 +202,10 @@ static void ui_draw_page_list(char **files, int fileCount, int currentItem, int 
       char truncnm[MAX_CHR];
       strncpy(truncnm, displayStr[line], MAX_CHR);
       truncnm[MAX_CHR - 1] = 0;
-      UG_PutString((320 / 2) - (strlen(truncnm) * 9 / 2), top, truncnm);
+  
+      UG_PutString(10, top+3, truncnm);
+
+
     }
     ui_flush();
     for (int i = 0; i < MAX_ITEM; ++i)

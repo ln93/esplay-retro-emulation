@@ -41,7 +41,7 @@
 #include "display_gb.h"
 #include "menu.h"
 #include "gb_frame.h"
-
+extern uint16_t freq;
 extern int debug_trace;
 
 int showOverlay = 0;
@@ -87,7 +87,7 @@ int pcm_submit()
     return 1;
 }
 
-void run_to_vblank()
+void run_to_vblank(int volume)
 {
     /* FRAME BEGIN */
 
@@ -128,7 +128,14 @@ void run_to_vblank()
         currentAudioSampleCount = pcm.pos;
 
         void *tempPtr = 0x1234;
-        xQueueSend(audioQueue, &tempPtr, portMAX_DELAY);
+        if (volume > 0)
+        {
+            xQueueSend(audioQueue, &tempPtr, portMAX_DELAY);
+        }
+        else
+        {
+            /* code */
+        }
 
         // Swap buffers
         currentAudioBuffer = currentAudioBuffer ? 0 : 1;
@@ -154,7 +161,7 @@ void run_to_vblank()
 
 volatile bool videoTaskIsRunning = false;
 esplay_scale_option scale_opt;
-
+extern uint8_t batlevel;
 void videoTask(void *arg)
 {
     esp_err_t ret;
@@ -172,19 +179,22 @@ void videoTask(void *arg)
 
         if (param == 2)
         {
-            for (int i=0; i<160*144; i++) {
-                int r,g,b;
-                r=((framebuffer[i]>>11)&0x1f)<<3;
-                g=((framebuffer[i]>>5)&0x3f)<<2;
-                b=((framebuffer[i]>>0)&0x1f)<<3;
+            for (int i = 0; i < 160 * 144; i++)
+            {
+                int r, g, b;
+                r = ((framebuffer[i] >> 11) & 0x1f) << 3;
+                g = ((framebuffer[i] >> 5) & 0x3f) << 2;
+                b = ((framebuffer[i] >> 0) & 0x1f) << 3;
                 uint16_t a = 200;
-                r=r*(256-a);
-                g=g*(256-a);
-                b=b*(256-a);
-                framebuffer[i]=((r>>(3+8))<<11)+((g>>(2+8))<<5)+((b>>(3+8))<<0);
+                r = r * (256 - a);
+                g = g * (256 - a);
+                b = b * (256 - a);
+                framebuffer[i] = ((r >> (3 + 8)) << 11) + ((g >> (2 + 8)) << 5) + ((b >> (3 + 8)) << 0);
             }
             write_gb_frame(framebuffer, scale_opt);
             int ret = showMenu();
+            if (batlevel == 0)
+                ret = MENU_SAVE_EXIT;
             switch (ret)
             {
             case MENU_SAVE_STATE:
@@ -293,7 +303,7 @@ static void SaveState()
         FILE *f = fopen(pathName, "w");
         if (f == NULL)
         {
-            printf("%s: fopen save failed\n", __func__);
+            printf("%s: fopen save failed1\n", __func__);
             abort();
         }
 
@@ -311,7 +321,7 @@ static void SaveState()
         FILE *f = fopen(StateFileName, "w");
         if (f == NULL)
         {
-            printf("SaveState: fopen save failed\n");
+            printf("SaveState: fopen save failed2\n");
         }
         else
         {
@@ -339,7 +349,7 @@ static void LoadState(const char *cartName)
         FILE *f = fopen(pathName, "r");
         if (f == NULL)
         {
-            printf("LoadState: fopen load failed\n");
+            printf("LoadState: fopen load failed1\n");
         }
         else
         {
@@ -363,7 +373,7 @@ static void LoadState(const char *cartName)
         FILE *f = fopen(StateFileName, "r");
         if (f == NULL)
         {
-            printf("LoadState: fopen load failed\n");
+            printf("LoadState: fopen load failed2\n");
         }
         else
         {
@@ -457,7 +467,7 @@ void app_main(void)
 
     // Audio
     audio_init(AUDIO_SAMPLE_RATE);
-
+    freq = 32000;
     // Display
     display_prepare();
     display_init();
@@ -674,7 +684,7 @@ void app_main(void)
         pad_set(PAD_B, joystick.values[GAMEPAD_INPUT_B]);
 
         startTime = xthal_get_ccount();
-        run_to_vblank();
+        run_to_vblank(volume);
         stopTime = xthal_get_ccount();
 
         lastJoysticState = joystick;

@@ -1,9 +1,9 @@
 /* GIMP RGBA C-Source image dump (splash.h) */
-
+/*
 static const struct {
   unsigned int 	 width;
   unsigned int 	 height;
-  unsigned int 	 bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+  unsigned int 	 bytes_per_pixel; 
   unsigned char	 pixel_data[150 * 48 * 2 + 1];
 } splash_screen = {
   150, 48, 2,
@@ -754,3 +754,4 @@ static const struct {
   "\377\377\377\377\377\377\377\377\377\377",
 };
 
+*/

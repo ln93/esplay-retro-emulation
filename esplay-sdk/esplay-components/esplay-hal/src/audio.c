@@ -9,7 +9,7 @@
 #include "pin_definitions.h"
 
 static float Volume = 1.0f;
-static int volumeLevel = 30;
+static int volumeLevel = 45;
 static int sampleRate;
 
 int audio_volume_get()
@@ -69,8 +69,8 @@ void audio_init(int sample_rate)
 
 void audio_submit(short *stereoAudioBuffer, int frameCount)
 {
-    if (volumeLevel != 0)
-    {
+//    if (volumeLevel != 0)
+//    {
         short currentAudioSampleCount = frameCount * 2;
 
         for (short i = 0; i < currentAudioSampleCount; ++i)
@@ -93,7 +93,7 @@ void audio_submit(short *stereoAudioBuffer, int frameCount)
             printf("i2s_write_bytes: count (%d) != len (%d)\n", count, len);
             abort();
         }
-    }
+//    }
 }
 
 void audio_terminate()

@@ -92,7 +92,7 @@ int sdcard_get_files_count(const char *path)
 
 int sdcard_files_get(const char *path, const char *extension, char ***filesOut)
 {
-    const int MAX_FILES = 2048;
+    const int MAX_FILES = 2000;
 
     int count = 0;
     char **result = (char **)malloc(MAX_FILES * sizeof(void *));
@@ -121,7 +121,8 @@ int sdcard_files_get(const char *path, const char *extension, char ***filesOut)
     while ((entry = readdir(dir)) != NULL)
     {
         size_t len = strlen(entry->d_name);
-
+//        printf("file nane is %s \n",entry->d_name);
+//        printf("file len is %d \n",len);
         // ignore 'hidden' files (MAC)
         bool skip = false;
         if (entry->d_name[0] == '.')
@@ -352,7 +353,7 @@ char *sdcard_create_savefile_path(const char *base_path, const char *fileName)
 
     //printf("%s: extension='%s'\n", __func__, extension);
 
-    const char *DATA_PATH = "/esplay/data/";
+    const char *DATA_PATH = "/espmini/data/";
     const char *SAVE_EXTENSION = ".sav";
 
     size_t savePathLength = strlen(base_path) + strlen(DATA_PATH) + strlen(extension) + 1 + strlen(fileName) + strlen(SAVE_EXTENSION) + 1;

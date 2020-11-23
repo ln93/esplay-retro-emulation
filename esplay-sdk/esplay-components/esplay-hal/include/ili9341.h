@@ -19,8 +19,8 @@ extern "C"
 /*********************
  *      DEFINES
  *********************/
-#define ILI9341_HOR_RES 320
-#define ILI9341_VER_RES 240
+#define ILI9341_HOR_RES 240
+#define ILI9341_VER_RES 192
 
     /**********************
  *      TYPEDEFS

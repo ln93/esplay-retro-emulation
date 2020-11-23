@@ -70,7 +70,7 @@ int settings_init(void)
 		return -1;
 	}
 
-	if (nvs_open("esplay", NVS_READWRITE, &handle) != ESP_OK) {
+	if (nvs_open("espmini", NVS_READWRITE, &handle) != ESP_OK) {
 		return -1;
 	}
 

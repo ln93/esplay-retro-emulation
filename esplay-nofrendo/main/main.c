@@ -27,7 +27,7 @@
 
 const char* SD_BASE_PATH = "/sd";
 static char* ROM_DATA = (char*)0x3f800000;
-
+extern uint16_t freq;
 extern bool forceConsoleReset;
 int32_t scaleAlg;
 
@@ -52,7 +52,7 @@ int app_main(void)
     esp_err_t ret;
 
     audio_init(32000);
-
+    freq=32000;
     char* fileName;
 
     char *romName = settings_load_str(SettingRomPath);

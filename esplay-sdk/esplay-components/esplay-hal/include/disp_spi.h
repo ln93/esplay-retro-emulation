@@ -16,26 +16,28 @@ extern "C"
  *********************/
 #include <stdint.h>
 
-    /*********************
+   /*********************
  *      DEFINES
  *********************/
 #define CMD_ON 0
 #define DATA_ON 1
 
-    /**********************
+   //#define _IS_KT 1
+
+   /**********************
  *      TYPEDEFS
  **********************/
 
-    /**********************
+   /**********************
  * GLOBAL PROTOTYPES
  **********************/
-    void disp_spi_init(void);
-    void disp_spi_send(uint8_t *data, uint16_t length, int dc);
-    void send_lines(int ypos, int width, uint16_t *linedata, int lineCount);
-    void send_lines_ext(int ypos, int xpos, int width, uint16_t *linedata, int lineCount);
-    void send_line_finish(void);
+   void disp_spi_init(void);
+   void disp_spi_send(uint8_t *data, uint16_t length, int dc);
+   void send_lines(int ypos, int width, uint16_t *linedata, int lineCount);
+   void send_lines_ext(int ypos, int xpos, int width, uint16_t *linedata, int lineCount);
+   void send_line_finish(void);
 
-    /**********************
+   /**********************
  *      MACROS
  **********************/
 

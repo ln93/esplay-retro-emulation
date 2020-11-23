@@ -100,6 +100,39 @@ static esp_err_t favicon_get_handler(httpd_req_t *req)
     return ESP_OK;
 }
 
+void  HexToAscii(char *pHex, char *pAscii, int nLen)
+{
+    unsigned char Nibble[2];
+    unsigned int i,j,k=0;
+    for (i = 0; i < nLen; i++){
+        if (pHex[i]<0x80)
+        {
+            *pAscii++ = pHex[i];
+            k++;
+        }
+        else
+        {
+            *pAscii++ ='%';
+            Nibble[0] = (pHex[i] & 0xF0) >> 4;
+            Nibble[1] = pHex[i] & 0x0F;
+            for (j = 0; j < 2; j++){
+                if (Nibble[j] < 10){            
+                    Nibble[j] += 0x30;
+                }
+                else{
+                    if (Nibble[j] < 16)
+                        Nibble[j] = Nibble[j] - 10 + 'A';
+                }
+                *pAscii++ = Nibble[j];
+            }               // for (int j = ...)
+            k=k+2;
+        }
+    }           // for (int i = ...)
+    for (i = k; i < 100; i++){
+        *pAscii++ =0;
+    }
+}
+
 /* Send HTTP response with a run-time generated html consisting of
  * a list of all files and folders under the requested path.
  * In case of SPIFFS this returns empty list when path is any
@@ -111,7 +144,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     char entrysize[16];
     const char *entrytype;
     char storageSpace[100];
-
+    char newfilename[100];
     struct dirent *entry;
     struct stat entry_stat;
 
@@ -131,8 +164,11 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
     }
 
     /* Send HTML file header */
-    httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><body>");
+    httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html><meta charset=""gb2312""><body>");
+//    httpd_resp_sendstr_chunk(req, "<!DOCTYPE html><html>");
+//    httpd_resp_sendstr_chunk(req,"<head><meta http-equiv=""content-type"" content=""text/html;charset=gbk"" /></head>");
 
+//    httpd_resp_sendstr_chunk(req, "<body>");
     /* Get handle to embedded file upload script */
     extern const unsigned char upload_script_start[] asm("_binary_upload_script_html_start");
     extern const unsigned char upload_script_end[] asm("_binary_upload_script_html_end");
@@ -160,6 +196,8 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         }
         sprintf(entrysize, "%ld", entry_stat.st_size);
         ESP_LOGI(TAG, "Found %s : %s (%s bytes)", entrytype, entry->d_name, entrysize);
+        
+        HexToAscii(entry->d_name,newfilename,strlen(entry->d_name));
 
         /* Send chunk of HTML file containing table entries with file name and size */
         httpd_resp_sendstr_chunk(req, "<tr><td><a href=\"");
@@ -168,7 +206,7 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         {
             httpd_resp_sendstr_chunk(req, "/");
         }
-        httpd_resp_sendstr_chunk(req, entry->d_name);
+        httpd_resp_sendstr_chunk(req, newfilename);
         httpd_resp_sendstr_chunk(req, "\">");
         httpd_resp_sendstr_chunk(req, entry->d_name);
         httpd_resp_sendstr_chunk(req, "</a></td><td>");
@@ -182,9 +220,11 @@ static esp_err_t http_resp_dir_html(httpd_req_t *req, const char *dirpath)
         {
             httpd_resp_sendstr_chunk(req, "/");
         }
-        httpd_resp_sendstr_chunk(req, entry->d_name);
+        httpd_resp_sendstr_chunk(req, newfilename);
+        //httpd_resp_sendstr_chunk(req, entry->d_name);
         httpd_resp_sendstr_chunk(req, "\"><button type=\"submit\">Delete</button></form>");
         httpd_resp_sendstr_chunk(req, "</td></tr>\n");
+        printf("file is %s \n",entry->d_name);
     }
     closedir(dir);
 
@@ -235,7 +275,10 @@ static const char *get_path_from_uri(char *dest, const char *base_path, const ch
     const size_t len = strlen(uri);
     char buffer[len + 1];
     buffer[0] = '\0';
+
+    printf("url is %s \n",uri);
     uri_decode(uri, len, buffer);
+    printf("after decode url is %s \n",buffer);
 
     const size_t base_pathlen = strlen(base_path);
     size_t pathlen = strlen(buffer);
@@ -484,6 +527,7 @@ static esp_err_t delete_post_handler(httpd_req_t *req)
     /* Note sizeof() counts NULL termination hence the -1 */
     const char *filename = get_path_from_uri(filepath, ((struct file_server_data *)req->user_ctx)->base_path,
                                              req->uri + sizeof("/delete") - 1, sizeof(filepath));
+
     if (!filename)
     {
         /* Respond with 500 Internal Server Error */

@@ -13,7 +13,7 @@
 
 #define LINE_BUFFERS (2)
 #define LINE_COUNT (8)
-
+int initlcd=0;
 uint16_t *line[LINE_BUFFERS];
 extern uint16_t myPalette[];
 
@@ -56,9 +56,11 @@ void display_poweroff(int percent)
 
 void write_frame_rectangleLE(short left, short top, short width, short height, uint16_t *buffer)
 {
+    
     short x, y, xv, yv;
     int sending_line = -1;
     int calc_line = 0;
+ //   left=left+80;
     if (left < 0 )
         left = 0;
     if (top < 0)
@@ -118,6 +120,7 @@ void renderGfx(short left, short top, short width, short height, uint16_t *buffe
     int sending_line = -1;
     int calc_line = 0;
 
+ //   left=left+80;
     if (left < 0 )
         left = 0;
     if (top < 0)
@@ -182,6 +185,7 @@ void display_show_hourglass()
 
 void display_show_splash()
 {
+    /*
     display_clear(0xffff);
     for (short i = 1; i < 151; ++i)
     {
@@ -196,6 +200,7 @@ void display_show_splash()
         vTaskDelay(2);
     }
     vTaskDelay(100);
+    */
 }
 
 const static uint8_t batEmptyIcon[]={
@@ -244,13 +249,22 @@ void display_clear(uint16_t color)
         }
     }
 
-    for (int y = 0; y < LCD_HEIGHT; y += LINE_COUNT)
+    for (int y = 0; y < 240; y += LINE_COUNT)
     {
         if (sending_line != -1)
             send_line_finish();
         sending_line = calc_line;
         calc_line = (calc_line == 1) ? 0 : 1;
-        send_lines_ext(y, 0, LCD_WIDTH, line[sending_line], LINE_COUNT);
+        if (initlcd)
+        {
+            send_lines_ext(y-40, 0, LCD_WIDTH, line[sending_line], LINE_COUNT);
+        }
+        else
+        {
+            send_lines_ext(y, 0, LCD_WIDTH, line[sending_line], LINE_COUNT);
+        }
+        
+        
     }
 
     send_line_finish();
@@ -273,4 +287,7 @@ void display_init()
 #else
     ili9341_init();
 #endif
+initlcd=1;
+    display_clear(0x0000);
+    initlcd=0;
 }

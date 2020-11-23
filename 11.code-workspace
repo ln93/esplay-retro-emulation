@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "..\\esp-idf"
+		},
+		{
+			"path": "..\\esp-idf-oga"
+		},
+		{
+			"path": "..\\esplay-base-firmware"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"git.ignoreLimitWarning": true
+	}
+}

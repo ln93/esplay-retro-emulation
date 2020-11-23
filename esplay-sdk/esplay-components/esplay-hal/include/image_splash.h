@@ -1,12 +1,15 @@
 /* GIMP RGBA C-Source image dump (image_splash.h) */
 
-static const struct
-{
-  unsigned int width;
-  unsigned int height;
-  unsigned int bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
-  unsigned char pixel_data[320 * 240 * 2 + 1];
-} image_splash = {
+//static const struct
+//{
+//  unsigned int width;
+//  unsigned int height;
+//  unsigned int bytes_per_pixel; /* 2:RGB16, 3:RGB, 4:RGBA */
+//  unsigned char pixel_data[];
+//} image_splash = {
+
+//}
+/*
     320,
     240,
     2,
@@ -4456,3 +4459,5 @@ static const struct
     "\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000\000"
     "\000\000\000\000\000\000\000\000\000\000\000",
 };
+*/
+

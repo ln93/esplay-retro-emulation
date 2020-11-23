@@ -771,7 +771,7 @@
     SAVED = false;
     DIR *directory;
     struct dirent *file;
-    char path[256] = "/sd/esplay/data/";
+    char path[256] = "/sd/espmini/data/";
     strcat(&path[strlen(path) - 1], DIRECTORIES[STEP]);
     directory = opendir(path);
     gets(name);
@@ -1003,7 +1003,7 @@
 
     DIR *directory;
     struct dirent *file;
-    char path[256] = "/sd/esplay/data/";
+    char path[256] = "/sd/espmini/data/";
     strcat(&path[strlen(path) - 1], DIRECTORIES[STEP]);
     directory = opendir(path);
     gets(ROM.name);

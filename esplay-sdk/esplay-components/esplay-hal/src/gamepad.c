@@ -11,6 +11,10 @@
 #include <driver/adc.h>
 #include "esp_adc_cal.h"
 #include "pin_definitions.h"
+#include "esp_sleep.h"
+#include "display.h"
+#include <settings.h>
+#include "audio.h"
 
 #define I2C_MASTER_TX_BUF_DISABLE 0 /*!< I2C master doesn't need buffer */
 #define I2C_MASTER_RX_BUF_DISABLE 0 /*!< I2C master doesn't need buffer */
@@ -29,6 +33,8 @@ static volatile bool input_gamepad_initialized = false;
 static SemaphoreHandle_t xSemaphore;
 static uint32_t i2c_frequency = 100000;
 static i2c_port_t i2c_port = I2C_NUM_0;
+uint8_t batlevel=10;
+uint16_t freq=0;
 
 static esp_err_t i2c_master_driver_initialize()
 {
@@ -43,22 +49,85 @@ static esp_err_t i2c_master_driver_initialize()
     return i2c_param_config(i2c_port, &conf);
 }
 
-static uint8_t i2c_keypad_read()
+void entersleep(void)
 {
-    int len = 1;
+    int len = 5;
+    uint8_t *data = malloc(len);
+    set_display_brightness(0);
+    audio_terminate();
+    data[3]=1;
+    while(data[3]==1)
+    {
+        esp_sleep_enable_timer_wakeup(1000*1000);	//uint64_t time_in_us
+        esp_light_sleep_start();
+
+        i2c_cmd_handle_t cmd = i2c_cmd_link_create();
+        i2c_master_start(cmd);
+        i2c_master_write_byte(cmd, I2C_ADDR << 1 | READ_BIT, ACK_CHECK_EN);
+        if (len > 1) 
+        {
+            i2c_master_read(cmd, data, len - 1, ACK_VAL);
+        }
+        i2c_master_read_byte(cmd, data + len - 1, NACK_VAL);
+        i2c_master_stop(cmd);
+        esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_RATE_MS);
+        i2c_cmd_link_delete(cmd);
+  //      printf("i2c key is : %d.enter sleep\n",data[3]);
+    }
+    free(data);
+ //   printf("sleep out \n");
+    if (freq)
+    {
+        audio_init(freq);
+    }
+    int brightness = 50;
+    settings_load(SettingBacklight, &brightness);
+    set_display_brightness(brightness);
+}
+
+static uint16_t i2c_keypad_read()
+{
+    int len = 5;
+    uint8_t bat=0;
     uint8_t *data = malloc(len);
 
     i2c_cmd_handle_t cmd = i2c_cmd_link_create();
     i2c_master_start(cmd);
     i2c_master_write_byte(cmd, I2C_ADDR << 1 | READ_BIT, ACK_CHECK_EN);
+    if (len > 1) {
+        i2c_master_read(cmd, data, len - 1, ACK_VAL);
+    }
     i2c_master_read_byte(cmd, data + len - 1, NACK_VAL);
+
     i2c_master_stop(cmd);
     esp_err_t ret = i2c_master_cmd_begin(i2c_port, cmd, 1000 / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
+    bat=data[4] ;
 
-    uint8_t val = data[0];
+    if (bat>250)
+        batlevel=10;
+    else if (bat<0x7a)
+        batlevel=4;
+    else if(bat<0x82)
+        batlevel=3;
+    else if(bat<0x8b)
+        batlevel=2;   
+    else if(bat<0x96)
+        batlevel=1;             
+    else 
+        batlevel=0;
+
+    uint16_t val =data[2] ;
+//    printf("i2c key is : %d , %d , %d , %d.\n",data[1],data[2],data[3],data[4]);
+     val = (val << 8)+ data[1];
+    if (data[3]==1)
+    {
+	    entersleep();
+        val= 0xffff;
+    }
+
     free(data);
-
+//printf("i2c key is : %d.ggggggggggggggg\n",val);
     return val;
 }
 
@@ -113,8 +182,8 @@ input_gamepad_state gamepad_input_read_raw()
 
     #ifdef CONFIG_ESPLAY_MICRO_HW
 
-    uint8_t i2c_data = i2c_keypad_read();
-    for (int i = 0; i < 8; ++i)
+    uint16_t i2c_data = i2c_keypad_read();
+    for (int i = 0; i < 11; ++i)
     {
         if(((1<<i)&i2c_data) == 0)
             state.values[i] = 1;
@@ -122,10 +191,10 @@ input_gamepad_state gamepad_input_read_raw()
             state.values[i] = 0;
     }
     #endif
-
-    state.values[GAMEPAD_INPUT_MENU] = !(gpio_get_level(MENU));
-    state.values[GAMEPAD_INPUT_L] = !(gpio_get_level(L_BTN));
-    state.values[GAMEPAD_INPUT_R] = !(gpio_get_level(R_BTN));
+    // printf("i2c key is : %d.\n",i2c_data);
+    //state.values[GAMEPAD_INPUT_MENU] = !(gpio_get_level(MENU));
+    //state.values[GAMEPAD_INPUT_L] = !(gpio_get_level(L_BTN));
+    //state.values[GAMEPAD_INPUT_R] = !(gpio_get_level(R_BTN));
 
     return state;
 }
@@ -150,7 +219,7 @@ static void input_task(void *arg)
 
         // Read hardware
         input_gamepad_state state = gamepad_input_read_raw();
-
+ //                                 gamepad_input_read_raw
         // Debounce
         xSemaphoreTake(xSemaphore, portMAX_DELAY);
 
@@ -241,8 +310,7 @@ void gamepad_init()
 
     btn_config.pin_bit_mask = (uint64_t)      //Bitmask
                               ((uint64_t)1 << L_BTN) |
-                              ((uint64_t)1 << R_BTN) |
-                              ((uint64_t)1 << MENU);
+                              ((uint64_t)1 << R_BTN) ;
     #endif
 
     btn_config.pull_up_en = GPIO_PULLUP_ENABLE;      //Disable pullup
@@ -253,6 +321,8 @@ void gamepad_init()
 
     // Start background polling
     xTaskCreatePinnedToCore(&input_task, "input_task", 1024 * 2, NULL, 5, NULL, 1);
+    gamepad_input_read_raw();
+    gamepad_input_read_raw();
 
     printf("input_gamepad_init done.\n");
 }
