@@ -87,7 +87,7 @@ int pcm_submit()
     return 1;
 }
 
-void run_to_vblank(int volume)
+void run_to_vblank(int volume, int frameskip)
 {
     /* FRAME BEGIN */
 
@@ -107,7 +107,7 @@ void run_to_vblank(int volume)
     /* VBLANK BEGIN */
 
     //vid_end();
-    if ((frame % 2) == 0)
+    if ((frame % (2 + frameskip * 2)) == 0)
     {
         xQueueSend(vidQueue, &framebuffer, portMAX_DELAY);
 
@@ -131,16 +131,17 @@ void run_to_vblank(int volume)
         if (volume > 0)
         {
             xQueueSend(audioQueue, &tempPtr, portMAX_DELAY);
+
+            // Swap buffers
+            currentAudioBuffer = currentAudioBuffer ? 0 : 1;
+            pcm.buf = audioBuffer[currentAudioBuffer];
+            pcm.pos = 0;
         }
         else
         {
-            /* code */
+            pcm.buf = 0;
+            //disable pcm copy
         }
-
-        // Swap buffers
-        currentAudioBuffer = currentAudioBuffer ? 0 : 1;
-        pcm.buf = audioBuffer[currentAudioBuffer];
-        pcm.pos = 0;
     }
 
     if (!(R_LCDC & 0x80))
@@ -212,6 +213,7 @@ void videoTask(void *arg)
                 SaveState();
                 system_application_set(0);
                 esp_restart();
+
                 break;
 
             case MENU_RESET:
@@ -233,7 +235,6 @@ void videoTask(void *arg)
         }
         else
             write_gb_frame(param, scale_opt);
-
         xQueueReceive(vidQueue, &param, portMAX_DELAY);
     }
 
@@ -309,10 +310,17 @@ static void SaveState()
 
         savestate(f);
         fclose(f);
+        char *rtcName = sdcard_create_rtcfile_path(SD_BASE_PATH, fileName);
+        if (!rtcName)
+            abort();
+        f = fopen(rtcName, "w");
+        rtc_ext_save(f);
+        fclose(f);
 
         printf("%s: savestate OK.\n", __func__);
 
         free(pathName);
+        free(rtcName);
         free(fileName);
         free(romPath);
     }
@@ -360,7 +368,17 @@ static void LoadState(const char *cartName)
             pal_dirty();
             sound_dirty();
             mem_updatemap();
-
+            char *rtcName = sdcard_create_rtcfile_path(SD_BASE_PATH, fileName);
+            if (rtcName)
+            {
+                f = fopen(rtcName, "r");
+                if (f)
+                {
+                    rtc_ext_load(f);
+                    fclose(f);
+                }
+            }
+            free(rtcName);
             printf("LoadState: loadstate OK.\n");
         }
 
@@ -633,7 +651,7 @@ void app_main(void)
     {
         emu_reset();
     }
-
+    int frame_skip = 0;
     gamepad_read(&lastJoysticState);
     while (true)
     {
@@ -645,6 +663,14 @@ void app_main(void)
             ignoreMenuButton = lastJoysticState.values[GAMEPAD_INPUT_MENU];
         }
 
+        if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && !joystick.values[GAMEPAD_INPUT_MENU] && menuButtonFrameCount < 30)
+        {
+            showOverlay = 1;
+            uint16_t *param = 2;
+            xQueueSend(vidQueue, &param, portMAX_DELAY);
+            lastJoysticState = joystick;
+        }
+
         if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && joystick.values[GAMEPAD_INPUT_MENU])
         {
             ++menuButtonFrameCount;
@@ -653,18 +679,16 @@ void app_main(void)
         {
             menuButtonFrameCount = 0;
         }
-
-        if (menuButtonFrameCount > 60 * 2)
+        if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && menuButtonFrameCount > 30)
+        //try frame skip
         {
-            PowerDown();
+            volume = 0;
+            frame_skip = 4;
         }
-
-        if (!ignoreMenuButton && lastJoysticState.values[GAMEPAD_INPUT_MENU] && !joystick.values[GAMEPAD_INPUT_MENU])
+        else
         {
-            showOverlay = 1;
-            uint16_t *param = 2;
-            xQueueSend(vidQueue, &param, portMAX_DELAY);
-            lastJoysticState = joystick;
+            volume = 1;
+            frame_skip = 0;
         }
 
         while (showOverlay)
@@ -684,7 +708,7 @@ void app_main(void)
         pad_set(PAD_B, joystick.values[GAMEPAD_INPUT_B]);
 
         startTime = xthal_get_ccount();
-        run_to_vblank(volume);
+        run_to_vblank(volume, frame_skip);
         stopTime = xthal_get_ccount();
 
         lastJoysticState = joystick;

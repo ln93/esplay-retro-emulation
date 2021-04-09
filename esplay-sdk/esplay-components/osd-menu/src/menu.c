@@ -44,7 +44,7 @@ int showMenu()
   int oldVol = 0;
   int br = 0;
   int oldBr = 0;
-  int pleaserefreshbar=1;
+  int pleaserefreshbar = 1;
   audio_terminate();
   while (1)
   {
@@ -54,10 +54,9 @@ int showMenu()
 
     if (doRefresh)
     {
-        drawBackground(top);
-        pleaserefreshbar=1;
+      drawBackground(top);
+      pleaserefreshbar = 1;
     }
-    
 
     if (!lastKey.values[GAMEPAD_INPUT_DOWN] && key.values[GAMEPAD_INPUT_DOWN])
     {
@@ -93,7 +92,7 @@ int showMenu()
           v = 100;
         audio_volume_set(v);
         settings_save(SettingAudioVolume, (int32_t)v);
-        vol=v;
+        vol = v;
         doRefresh = 1;
       }
       if (menuItem == SCN_BRIGHT)
@@ -104,9 +103,14 @@ int showMenu()
           v = 100;
         settings_save(SettingBacklight, (int32_t)v);
         set_display_brightness(v);
-        br=v;
+        br = v;
         doRefresh = 1;
       }
+    }
+    if (lastKey.values[GAMEPAD_INPUT_MENU] && !key.values[GAMEPAD_INPUT_MENU])
+    {
+      audio_resume();
+      return MENU_CONTINUE;
     }
     if (!lastKey.values[GAMEPAD_INPUT_A] && key.values[GAMEPAD_INPUT_A])
     {
@@ -120,25 +124,25 @@ int showMenu()
         return MENU_SAVE_EXIT;
 
       if (menuItem == SCN_RESET)
-        {
-          audio_resume();
-          return MENU_RESET;
-        }
+      {
+        audio_resume();
+        return MENU_RESET;
+      }
 
       if (menuItem == SCN_EXIT)
         return MENU_EXIT;
 
       if (menuItem == SCN_CONTINUE)
-        {
-          audio_resume();
-          return MENU_CONTINUE;
-        }
+      {
+        audio_resume();
+        return MENU_CONTINUE;
+      }
 
       if (menuItem == SCN_LOAD)
-        {
-          audio_resume();
-          return MENU_LOAD;
-        }
+      {
+        audio_resume();
+        return MENU_LOAD;
+      }
     }
 
     if (menuItem == SCN_VOLUME && vol != oldVol)
@@ -151,44 +155,43 @@ int showMenu()
     if (prevItem != menuItem)
     {
       drawBackground(top);
-      pleaserefreshbar=1;
+      pleaserefreshbar = 1;
     }
-      
 
     //Render arrows
     int t = xTaskGetTickCount() / (200 / portTICK_PERIOD_MS);
     t = (t & 1);
     if (t != oldArrowsTick)
     {
-      renderMenu(52, 24 * menuItem +3, 65, t ? 0 : 15, 15, 15);
+      renderMenu(52, 24 * menuItem + 3, 65, t ? 0 : 15, 15, 15);
       oldArrowsTick = t;
     }
 
     if (refreshArrow)
-      renderGfx((240 - 150) / 2, 0, 24, 192, menu_bg.pixel_data, 0, 0, menu_bg.width);   //x=(240 - 150) / 2
+      renderGfx((240 - 150) / 2, 0, 24, 192, menu_bg.pixel_data, 0, 0, menu_bg.width); //x=(240 - 150) / 2
     if (pleaserefreshbar)
     {
-      pleaserefreshbar=0;
+      pleaserefreshbar = 0;
       int32_t v;
       settings_load(SettingAudioVolume, &v);
-        renderMenu(100, 7, 0, 8, 65, 8);
-        renderMenu(100, 7, 0, 0, (v * 65) / 100, 8);
+      renderMenu(100, 7, 0, 8, 65, 8);
+      renderMenu(100, 7, 0, 0, (v * 65) / 100, 8);
       settings_load(SettingBacklight, &v);
-        renderMenu(100, 31, 0, 8, 65, 8);
-        renderMenu(100, 31, 0, 0, (v * 65) / 100, 8);
-      }
+      renderMenu(100, 31, 0, 8, 65, 8);
+      renderMenu(100, 31, 0, 0, (v * 65) / 100, 8);
+    }
     if (doRefresh)
     {
       int32_t v;
       settings_load(SettingAudioVolume, &v);
-      if (top==0)
+      if (top == 0)
         renderMenu(100, 7, 0, 8, 65, 8);
-        renderMenu(100, 7, 0, 0, (v * 65) / 100, 8);
+      renderMenu(100, 7, 0, 0, (v * 65) / 100, 8);
 
       settings_load(SettingBacklight, &v);
-      if (top==30)
+      if (top == 30)
         renderMenu(100, 31, 0, 8, 65, 8);
-        renderMenu(100, 31, 0, 0, (v * 65) / 100, 8);
+      renderMenu(100, 31, 0, 0, (v * 65) / 100, 8);
     }
 
     prevItem = menuItem;

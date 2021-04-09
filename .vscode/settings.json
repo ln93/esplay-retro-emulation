@@ -1,0 +1,10 @@
+{
+    "files.associations": {
+        "*.inc": "c",
+        "graphics.h": "c",
+        "esplay-ui.h": "c",
+        "ugui.h": "c",
+        "display.h": "c",
+        "splash.h": "c"
+    }
+}

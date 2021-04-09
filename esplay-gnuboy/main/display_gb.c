@@ -5,6 +5,7 @@
 #include "display_gb.h"
 #include "display.h"
 #include "disp_spi.h"
+#include "math.h"
 
 extern uint16_t *line[];
 extern int32_t scaleAlg;
@@ -16,9 +17,7 @@ extern uint8_t batlevel;
 static uint16_t getPixel(const uint16_t *bufs, int x, int y, int w1, int h1, int w2, int h2, int x_ratio, int y_ratio)
 {
     uint16_t col;
-    switch (scaleAlg)
-    {
-    case NEAREST_NEIGHBOR:
+    if (scaleAlg == NEAREST_NEIGHBOR || x >= w2 - 1 || y >= h2 - 1) //fuck yeah
     {
         /* Resize using nearest neighbor alghorithm */
         /* Simple and fastest way but low quality   */
@@ -27,8 +26,7 @@ static uint16_t getPixel(const uint16_t *bufs, int x, int y, int w1, int h1, int
         col = bufs[(y2 * w1) + x2];
         return col;
     }
-    break;
-    case BILINIER_INTERPOLATION:
+    else //if (scaleAlg == BILINIER_INTERPOLATION)
     {
         /* Resize using bilinear interpolation */
         /* higher quality but lower performance, */
@@ -63,30 +61,67 @@ static uint16_t getPixel(const uint16_t *bufs, int x, int y, int w1, int h1, int
 
         return col;
     }
-    break;
-
-    default: //case BOX_FILTERED:
-        // experimental, currently disabled
+}
+void showbackground(FILE *f)
+{
+    short x, y;
+    int sending_line = -1;
+    int calc_line = 0;
+    unsigned char bgLine[240 * 3];
+    for (y = 0; y < 192; y += LINE_COUNT)
+    {
+        fseek(f, 54 + (191 - y) * 240 * 3, SEEK_SET);
+        for (int i = 0; i < LINE_COUNT; ++i)
         {
-            int xv, yv, a, b, c, d, index, p, q;
-
-            xv = (int)((x_ratio * x) >> 16);
-            yv = (int)((y_ratio * y) >> 16);
-
-            index = yv * w1 + xv;
-
-            a = bufs[index];
-            b = bufs[index + 1];
-            c = bufs[index + w1];
-            d = bufs[index + w1 + 1];
-
-            p = AVERAGE(a, b);
-            q = AVERAGE(c, d);
-
-            col = AVERAGE(p, q);
-
-            return col;
+            int index = (i)*240;
+            fread(&bgLine, 1, 240 * 3, f);
+            for (x = 0; x < 240; ++x)
+            {
+                unsigned char b, g, r;
+                //BMP use RGB888, while esplay use RGB565, decode here.
+                b = bgLine[x * 3];
+                g = bgLine[x * 3 + 1];
+                r = bgLine[x * 3 + 2];
+                unsigned short pixel = ((int)(r >> 3) << 11) | ((int)(g >> 2) << 5) | ((int)(b >> 3));
+                line[calc_line][index++] = ((pixel & 0xFF) << 8) + ((pixel >> 8) & 0xFF);
+            }
+            fseek(f, -2 * 240 * 3, SEEK_CUR);
         }
+        if (sending_line != -1)
+            send_line_finish();
+        sending_line = calc_line;
+        calc_line = (calc_line == 1) ? 0 : 1;
+        send_lines_ext(y, 0, 240, line[sending_line], LINE_COUNT);
+    }
+
+    send_line_finish();
+}
+void init_background(void)
+{
+    printf("Init Background.\n");
+    char *bgName = "/sd/espmini/bg.bmp";
+    FILE *f = fopen(bgName, "r");
+    if (f == NULL)
+    {
+        printf("No background detected: use default background pattern\n");
+        return;
+    }
+    else
+    {
+        printf("Find /sd/espmini/bg.bmp.\n");
+        //we don't check bmp head
+        //just assume the bmp is 240*192.
+
+        for (int y = 191; y >= 0; y -= LINE_COUNT)
+        {
+            for (int x = 0; x < LINE_COUNT; ++x)
+            {
+            }
+        }
+
+        showbackground(f);
+        fclose(f);
+        printf("Init background success.\n");
     }
 }
 
@@ -123,12 +158,20 @@ void write_gb_frame(const uint16_t *data, esplay_scale_option scale)
             send_lines_ext(y, 0, LCD_WIDTH, line[sending_line], 1);
         }
         send_line_finish();
+        if (scale == SCALE_NONE)
+            init_background();
     }
     else
     {
         switch (scale)
         {
         case SCALE_NONE:
+            if (init_back_ground_image == 0)
+            {
+                init_back_ground_image = 1;
+                init_background();
+            }
+
             ypos = (LCD_HEIGHT - GB_FRAME_HEIGHT) / 2;
             xpos = (LCD_WIDTH - GB_FRAME_WIDTH) / 2;
 
@@ -170,15 +213,13 @@ void write_gb_frame(const uint16_t *data, esplay_scale_option scale)
         case SCALE_STRETCH:
             outputHeight = LCD_HEIGHT;
             outputWidth = LCD_WIDTH;
-            x_ratio = (int)((GB_FRAME_WIDTH << 16) / outputWidth) + 1;
-            y_ratio = (int)((GB_FRAME_HEIGHT << 16) / outputHeight) + 1;
+            x_ratio = (int)(((GB_FRAME_WIDTH - 1) << 16) / (outputWidth - 1));
+            y_ratio = (int)(((GB_FRAME_HEIGHT - 1) << 16) / (outputHeight - 1));
 
             for (y = 0; y < outputHeight; y += LINE_COUNT)
             {
                 for (int i = 0; i < LINE_COUNT; ++i)
                 {
-                    if ((y + i) >= outputHeight)
-                        break;
 
                     int index = (i)*outputWidth;
 
@@ -204,7 +245,7 @@ void write_gb_frame(const uint16_t *data, esplay_scale_option scale)
                             }
                         }
                     }
-                    else
+                    else if ((y + i) < outputHeight)
                     {
                         for (x = 0; x < outputWidth; ++x)
                         {
@@ -212,6 +253,8 @@ void write_gb_frame(const uint16_t *data, esplay_scale_option scale)
                             line[calc_line][index++] = ((sample >> 8) | ((sample) << 8));
                         }
                     }
+                    else
+                        break;
                 }
                 if (sending_line != -1)
                     send_line_finish();
@@ -226,8 +269,8 @@ void write_gb_frame(const uint16_t *data, esplay_scale_option scale)
             outputHeight = LCD_HEIGHT;
             outputWidth = GB_FRAME_WIDTH * LCD_HEIGHT / GB_FRAME_HEIGHT; //GB_FRAME_WIDTH + (LCD_HEIGHT - GB_FRAME_HEIGHT);
             xpos = (LCD_WIDTH - outputWidth) / 2;
-            x_ratio = (int)((GB_FRAME_WIDTH << 16) / outputWidth) + 1;
-            y_ratio = (int)((GB_FRAME_HEIGHT << 16) / outputHeight) + 1;
+            x_ratio = (int)(((GB_FRAME_WIDTH - 1) << 16) / (outputWidth - 1));
+            y_ratio = (int)(((GB_FRAME_HEIGHT - 1) << 16) / (outputHeight - 1));
 
             for (y = 0; y < outputHeight; y += LINE_COUNT)
             {

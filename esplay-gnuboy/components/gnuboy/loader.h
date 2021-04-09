@@ -1,7 +1,6 @@
 #ifndef __LOADER_H__
 #define __LOADER_H__
 
-
 typedef struct loader_s
 {
 	char *rom;
@@ -10,7 +9,6 @@ typedef struct loader_s
 	char *state;
 	int ramloaded;
 } loader_t;
-
 
 extern loader_t loader;
 
@@ -21,7 +19,7 @@ int sram_load();
 int sram_save();
 void state_load(int n);
 void state_save(int n);
-
-
+void rtc_ext_save(FILE *f);
+void rtc_ext_load(FILE *f);
 
 #endif

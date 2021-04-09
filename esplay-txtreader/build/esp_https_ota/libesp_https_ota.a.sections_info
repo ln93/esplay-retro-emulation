@@ -1,0 +1,42 @@
+In archive E:/espproject/esplay-retro-emulation/esplay-txtreader/build/esp_https_ota/libesp_https_ota.a:
+
+esp_https_ota.o:     file format elf32-xtensa-le
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .literal.esp_https_ota 000000d4  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .text         00000000  00000000  00000000  00000108  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .data         00000000  00000000  00000000  00000108  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  3 .bss          00000000  00000000  00000000  00000108  2**0
+                  ALLOC
+  4 .rodata.str1.1 00000307  00000000  00000000  00000108  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  5 .text.esp_https_ota 0000023c  00000000  00000000  00000410  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  6 .debug_frame  00000028  00000000  00000000  0000064c  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+  7 .debug_info   00000a3b  00000000  00000000  00000674  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+  8 .debug_abbrev 000001d5  00000000  00000000  000010af  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_loc    00000191  00000000  00000000  00001284  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 10 .debug_aranges 00000020  00000000  00000000  00001415  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 11 .debug_ranges 00000010  00000000  00000000  00001435  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 12 .debug_line   00000432  00000000  00000000  00001445  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 13 .debug_str    00000c84  00000000  00000000  00001877  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 14 .comment      0000003c  00000000  00000000  000024fb  2**0
+                  CONTENTS, READONLY
+ 15 .xtensa.info  00000038  00000000  00000000  00002537  2**0
+                  CONTENTS, READONLY
+ 16 .xt.lit       00000008  00000000  00000000  0000256f  2**0
+                  CONTENTS, RELOC, READONLY
+ 17 .xt.prop      0000015c  00000000  00000000  00002577  2**0
+                  CONTENTS, RELOC, READONLY

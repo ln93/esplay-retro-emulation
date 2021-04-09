@@ -71,8 +71,8 @@ static void sort_files(char **files, int count)
 int sdcard_get_files_count(const char *path)
 {
     int file_count = 0;
-    DIR * dirp;
-    struct dirent * entry;
+    DIR *dirp;
+    struct dirent *entry;
 
     dirp = opendir(path); /* There should be error handling after this */
     if (dirp == NULL)
@@ -80,8 +80,10 @@ int sdcard_get_files_count(const char *path)
         printf("opendir failed.\n");
         return 0;
     }
-    while ((entry = readdir(dirp)) != NULL) {
-        if (entry->d_type == DT_REG) { /* If the entry is a regular file */
+    while ((entry = readdir(dirp)) != NULL)
+    {
+        if (entry->d_type == DT_REG)
+        { /* If the entry is a regular file */
             file_count++;
         }
     }
@@ -121,8 +123,8 @@ int sdcard_files_get(const char *path, const char *extension, char ***filesOut)
     while ((entry = readdir(dir)) != NULL)
     {
         size_t len = strlen(entry->d_name);
-//        printf("file nane is %s \n",entry->d_name);
-//        printf("file len is %d \n",len);
+        //        printf("file nane is %s \n",entry->d_name);
+        //        printf("file len is %d \n",len);
         // ignore 'hidden' files (MAC)
         bool skip = false;
         if (entry->d_name[0] == '.')
@@ -355,6 +357,58 @@ char *sdcard_create_savefile_path(const char *base_path, const char *fileName)
 
     const char *DATA_PATH = "/espmini/data/";
     const char *SAVE_EXTENSION = ".sav";
+
+    size_t savePathLength = strlen(base_path) + strlen(DATA_PATH) + strlen(extension) + 1 + strlen(fileName) + strlen(SAVE_EXTENSION) + 1;
+    char *savePath = malloc(savePathLength);
+    if (savePath)
+    {
+        strcpy(savePath, base_path);
+        strcat(savePath, DATA_PATH);
+        strcat(savePath, extension);
+        strcat(savePath, "/");
+        strcat(savePath, fileName);
+        strcat(savePath, SAVE_EXTENSION);
+
+        printf("%s: savefile_path='%s'\n", __func__, savePath);
+
+        result = savePath;
+    }
+
+    return result;
+}
+char *sdcard_create_rtcfile_path(const char *base_path, const char *fileName)
+{
+    char *result = NULL;
+
+    if (!base_path)
+        abort();
+    if (!fileName)
+        abort();
+
+    //printf("%s: base_path='%s', fileName='%s'\n", __func__, base_path, fileName);
+
+    // Determine folder
+    char *extension = fileName + strlen(fileName); // place at NULL terminator
+    while (extension != fileName)
+    {
+        if (*extension == '.')
+        {
+            ++extension;
+            break;
+        }
+        --extension;
+    }
+
+    if (extension == fileName)
+    {
+        printf("%s: File extention not found.\n", __func__);
+        abort();
+    }
+
+    //printf("%s: extension='%s'\n", __func__, extension);
+
+    const char *DATA_PATH = "/espmini/data/";
+    const char *SAVE_EXTENSION = ".txt";
 
     size_t savePathLength = strlen(base_path) + strlen(DATA_PATH) + strlen(extension) + 1 + strlen(fileName) + strlen(SAVE_EXTENSION) + 1;
     char *savePath = malloc(savePathLength);

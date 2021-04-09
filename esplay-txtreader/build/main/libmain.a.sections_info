@@ -1,0 +1,123 @@
+In archive E:/espproject/esplay-retro-emulation/esplay-txtreader/build/main/libmain.a:
+
+main.o:     file format elf32-xtensa-le
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .literal.pset 00000004  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .literal.LoadState 00000080  00000000  00000000  00000038  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  2 .literal.SaveState 00000064  00000000  00000000  000000b8  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  3 .literal.videoTask 00000074  00000000  00000000  0000011c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  4 .literal.ui_clear_screen 0000000c  00000000  00000000  00000190  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  5 .literal.ui_flush 00000008  00000000  00000000  0000019c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  6 .literal.app_main 000000e0  00000000  00000000  000001a4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  7 .text         00000000  00000000  00000000  00000284  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  8 .data         00000000  00000000  00000000  00000284  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  9 .bss          00000000  00000000  00000000  00000284  2**0
+                  ALLOC
+ 10 .text.pset    00000024  00000000  00000000  00000284  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 11 .rodata.str1.1 000001b3  00000000  00000000  000002a8  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 12 .text.LoadState 00000126  00000000  00000000  0000045c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 13 .text.SaveState 000000b6  00000000  00000000  00000584  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 14 .text.videoTask 00000120  00000000  00000000  0000063c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 15 .rodata.videoTask 00000014  00000000  00000000  0000075c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, DATA
+ 16 .text.ui_clear_screen 00000016  00000000  00000000  00000770  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 17 .text.ui_flush 0000001a  00000000  00000000  00000788  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 18 .text.app_main 00000253  00000000  00000000  000007a4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 19 .rodata.__func__$10927 0000000a  00000000  00000000  000009f7  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 20 .bss.videoTaskIsRunning 00000001  00000000  00000000  00000a01  2**0
+                  ALLOC
+ 21 .data.SD_BASE_PATH 00000004  00000000  00000000  00000a04  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, DATA
+ 22 .bss.txt      00000004  00000000  00000000  00000a08  2**2
+                  ALLOC
+ 23 .bss.deltaPTR 00000004  00000000  00000000  00000a08  2**2
+                  ALLOC
+ 24 .bss.FilePTR  00000004  00000000  00000000  00000a08  2**2
+                  ALLOC
+ 25 .bss.showOverlay 00000004  00000000  00000000  00000a08  2**2
+                  ALLOC
+ 26 .debug_frame  000000b8  00000000  00000000  00000a08  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 27 .debug_info   00002eb1  00000000  00000000  00000ac0  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 28 .debug_abbrev 0000036f  00000000  00000000  00003971  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 29 .debug_loc    000001b7  00000000  00000000  00003ce0  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 30 .debug_aranges 00000050  00000000  00000000  00003e97  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 31 .debug_ranges 00000040  00000000  00000000  00003ee7  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 32 .debug_line   0000090f  00000000  00000000  00003f27  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 33 .debug_str    00000f45  00000000  00000000  00004836  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 34 .comment      0000003c  00000000  00000000  0000577b  2**0
+                  CONTENTS, READONLY
+ 35 .xtensa.info  00000038  00000000  00000000  000057b7  2**0
+                  CONTENTS, READONLY
+ 36 .xt.lit       00000038  00000000  00000000  000057ef  2**0
+                  CONTENTS, RELOC, READONLY
+ 37 .xt.prop      000003b4  00000000  00000000  00005827  2**0
+                  CONTENTS, RELOC, READONLY
+
+display_txt.o:     file format elf32-xtensa-le
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .literal.write_txt_frame 00000048  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .text         00000000  00000000  00000000  0000007c  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  2 .data         00000000  00000000  00000000  0000007c  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  3 .bss          00000000  00000000  00000000  0000007c  2**0
+                  ALLOC
+  4 .rodata.str1.1 00000058  00000000  00000000  0000007c  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+  5 .text.write_txt_frame 00000130  00000000  00000000  000000d4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  6 .debug_frame  00000028  00000000  00000000  00000204  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+  7 .debug_info   00001d25  00000000  00000000  0000022c  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+  8 .debug_abbrev 0000023c  00000000  00000000  00001f51  2**0
+                  CONTENTS, READONLY, DEBUGGING
+  9 .debug_loc    00000316  00000000  00000000  0000218d  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 10 .debug_aranges 00000020  00000000  00000000  000024a3  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 11 .debug_ranges 00000068  00000000  00000000  000024c3  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 12 .debug_line   0000038d  00000000  00000000  0000252b  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 13 .debug_str    00000665  00000000  00000000  000028b8  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 14 .comment      0000003c  00000000  00000000  00002f1d  2**0
+                  CONTENTS, READONLY
+ 15 .xtensa.info  00000038  00000000  00000000  00002f59  2**0
+                  CONTENTS, READONLY
+ 16 .xt.lit       00000008  00000000  00000000  00002f91  2**0
+                  CONTENTS, RELOC, READONLY
+ 17 .xt.prop      000000fc  00000000  00000000  00002f99  2**0
+                  CONTENTS, RELOC, READONLY

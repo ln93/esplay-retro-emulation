@@ -1,0 +1,52 @@
+In archive E:/espproject/esplay-retro-emulation/esplay-txtreader/build/osd-menu/libosd-menu.a:
+
+menu.o:     file format elf32-xtensa-le
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .literal.drawBackground 00000008  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .literal.renderMenu 00000008  00000000  00000000  0000003c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  2 .literal.showMenu 00000088  00000000  00000000  00000044  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  3 .text         00000000  00000000  00000000  000000cc  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+  4 .data         00000000  00000000  00000000  000000cc  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+  5 .bss          00000000  00000000  00000000  000000cc  2**0
+                  ALLOC
+  6 .text.drawBackground 00000026  00000000  00000000  000000cc  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  7 .text.renderMenu 00000026  00000000  00000000  000000f4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  8 .text.showMenu 00000398  00000000  00000000  0000011c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  9 .rodata.menu_gfx 000012d0  00000000  00000000  000004b4  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 10 .rodata.menu_bg 0000e110  00000000  00000000  00001784  2**2
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 11 .debug_frame  00000058  00000000  00000000  0000f894  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 12 .debug_info   00000893  00000000  00000000  0000f8ec  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 13 .debug_abbrev 000001ba  00000000  00000000  0001017f  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 14 .debug_loc    00000324  00000000  00000000  00010339  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 15 .debug_aranges 00000030  00000000  00000000  0001065d  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 16 .debug_ranges 00000048  00000000  00000000  0001068d  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 17 .debug_line   00000637  00000000  00000000  000106d5  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 18 .debug_str    00000527  00000000  00000000  00010d0c  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 19 .comment      0000003c  00000000  00000000  00011233  2**0
+                  CONTENTS, READONLY
+ 20 .xtensa.info  00000038  00000000  00000000  0001126f  2**0
+                  CONTENTS, READONLY
+ 21 .xt.lit       00000018  00000000  00000000  000112a7  2**0
+                  CONTENTS, RELOC, READONLY
+ 22 .xt.prop      00000240  00000000  00000000  000112bf  2**0
+                  CONTENTS, RELOC, READONLY

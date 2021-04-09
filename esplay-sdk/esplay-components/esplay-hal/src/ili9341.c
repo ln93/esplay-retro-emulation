@@ -68,28 +68,28 @@ void ili9341_init(void)
 {
 	lcd_init_cmd_t ili_init_cmds[] = {
 #if _IS_KT
-    {0x36, {(1 << 6) | (1 << 7)  | (0 << 3)}, 1},  //KT
+		{0x36, {(1 << 6) | (1 << 7) | (0 << 3)}, 1}, //KT
 #else
-	{0x36, {(0 << 6) | (0 << 5)  | (0 << 3)}, 1},  // MY MX MV  7 6 5 | RGB    //ST7789V  //ST7789V
+		{0x36, {(0 << 6) | (0 << 5) | (0 << 3)}, 1}, // MY MX MV  7 6 5 | RGB    //ST7789V  //ST7789V
 #endif
 
-    {0x3A, {0x55}, 1},
-    {0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
-    {0xB7, {0x72}, 1},  //35  72
-    {0xBB, {0x3d}, 1},  //2b   3d
-    {0xC0, {0x2C}, 1},
-    {0xC2, {0x01, 0xFF}, 2},
-    {0xC3, {0x19}, 1},   //11  19
-    {0xC4, {0x20}, 1},
-    {0xC6, {0x0f}, 1},
-    {0xD0, {0xA4, 0xA1}, 2},
-    {0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
-    {0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
+		{0x3A, {0x55}, 1},
+		{0xB2, {0x0c, 0x0c, 0x00, 0x33, 0x33}, 5},
+		{0xB7, {0x72}, 1}, //35  72
+		{0xBB, {0x3d}, 1}, //2b   3d
+		{0xC0, {0x2C}, 1},
+		{0xC2, {0x01, 0xFF}, 2},
+		{0xC3, {0x19}, 1}, //11  19
+		{0xC4, {0x20}, 1},
+		{0xC6, {0x0f}, 1},
+		{0xD0, {0xA4, 0xA1}, 2},
+		{0xE0, {0xD0, 0x00, 0x05, 0x0E, 0x15, 0x0D, 0x37, 0x43, 0x47, 0x09, 0x15, 0x12, 0x16, 0x19}, 14},
+		{0xE1, {0xD0, 0x00, 0x05, 0x0D, 0x0C, 0x06, 0x2D, 0x44, 0x40, 0x0E, 0x1C, 0x18, 0x16, 0x19}, 14},
 
-    {0x21, {0}, 0x80},
-    {0x11, {0}, 0x80},
-    {0x29, {0}, 0x80},
-    {0, {0}, 0xff},
+		{0x21, {0}, 0x80},
+		{0x11, {0}, 0x80},
+		{0x29, {0}, 0x80},
+		{0, {0}, 0xff},
 	};
 
 	//Initialize non-SPI GPIOs
@@ -126,10 +126,10 @@ int ili9341_is_backlight_initialized()
 
 void ili9341_backlight_percentage_set(int value)
 {
-	int duty = DUTY_MAX * (value * 0.004f);
-
-	ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty, 500);
-	ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
+	int duty = DUTY_MAX * ((value + 5) * 0.0038f);
+	ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty, 50, LEDC_FADE_NO_WAIT);
+	//ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, duty, 500);
+	//ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
 }
 
 void ili9341_poweroff()
@@ -137,8 +137,9 @@ void ili9341_poweroff()
 	esp_err_t err = ESP_OK;
 
 	// fade off backlight
-	ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (LCD_BACKLIGHT_ON_VALUE) ? 0 : DUTY_MAX, 100);
-	ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_WAIT_DONE);
+	ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (LCD_BACKLIGHT_ON_VALUE) ? 0 : DUTY_MAX, 100, LEDC_FADE_WAIT_DONE);
+	//ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (LCD_BACKLIGHT_ON_VALUE) ? 0 : DUTY_MAX, 100);
+	//ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_WAIT_DONE);
 
 	// Disable LCD panel
 	int cmd = 0;
@@ -212,8 +213,8 @@ static void backlight_init()
 	ledc_timer_config_t ledc_timer;
 	memset(&ledc_timer, 0, sizeof(ledc_timer));
 
-	ledc_timer.duty_resolution = LEDC_TIMER_13_BIT; //set timer counter bit number
-	ledc_timer.freq_hz = 5000;						//set frequency of pwm
+	ledc_timer.duty_resolution = LEDC_TIMER_12_BIT; //set timer counter bit number
+	ledc_timer.freq_hz = 10000;						//set frequency of pwm
 	ledc_timer.speed_mode = LEDC_LOW_SPEED_MODE;	//timer mode,
 	ledc_timer.timer_num = LEDC_TIMER_0;			//timer index
 
@@ -243,8 +244,9 @@ static void backlight_init()
 	ledc_fade_func_install(0);
 
 	// duty range is 0 ~ ((2**duty_resolution)-1)
-	ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (LCD_BACKLIGHT_ON_VALUE) ? DUTY_MAX : 0, 500);
-	ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
+	ledc_set_fade_time_and_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (LCD_BACKLIGHT_ON_VALUE) ? 0 : DUTY_MAX, 500, LEDC_FADE_NO_WAIT);
+	//ledc_set_fade_with_time(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, (LCD_BACKLIGHT_ON_VALUE) ? DUTY_MAX : 0, 500);
+	//ledc_fade_start(LEDC_LOW_SPEED_MODE, LEDC_CHANNEL_0, LEDC_FADE_NO_WAIT);
 
 	isBackLightIntialized = true;
 

@@ -1,0 +1,86 @@
+In archive E:/espproject/esplay-retro-emulation/esplay-txtreader/build/esplay-ui/libesplay-ui.a:
+
+esplay-ui.o:     file format elf32-xtensa-le
+
+Sections:
+Idx Name          Size      VMA       LMA       File off  Algn
+  0 .literal.pset 00000004  00000000  00000000  00000034  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  1 .literal.ui_get_fb 00000004  00000000  00000000  00000038  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  2 .literal.ui_clear_screen 0000000c  00000000  00000000  0000003c  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  3 .literal.ui_flush 00000008  00000000  00000000  00000048  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  4 .literal.ui_draw_page_list$isra$0 00000078  00000000  00000000  00000050  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  5 .literal.ui_init 0000002c  00000000  00000000  000000c8  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  6 .literal.ui_deinit 00000010  00000000  00000000  000000f4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  7 .literal.ui_display_progress 00000014  00000000  00000000  00000104  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  8 .literal.ui_display_seekbar 00000018  00000000  00000000  00000118  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+  9 .literal.ui_display_switch 00000014  00000000  00000000  00000130  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 10 .literal.ui_file_chooser 0000005c  00000000  00000000  00000144  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 11 .text         00000000  00000000  00000000  000001a0  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, CODE
+ 12 .data         00000000  00000000  00000000  000001a0  2**0
+                  CONTENTS, ALLOC, LOAD, DATA
+ 13 .bss          00000000  00000000  00000000  000001a0  2**0
+                  ALLOC
+ 14 .text.pset    00000024  00000000  00000000  000001a0  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 15 .text.ui_get_fb 0000000a  00000000  00000000  000001c4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 16 .text.ui_clear_screen 00000016  00000000  00000000  000001d0  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 17 .text.ui_flush 0000001a  00000000  00000000  000001e8  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 18 .rodata.str1.1 00000025  00000000  00000000  00000202  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 19 .text.ui_draw_page_list$isra$0 00000215  00000000  00000000  00000228  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 20 .text.ui_init 00000045  00000000  00000000  00000440  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 21 .text.ui_deinit 00000021  00000000  00000000  00000488  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 22 .text.ui_display_progress 000000a6  00000000  00000000  000004ac  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 23 .text.ui_display_seekbar 000000ce  00000000  00000000  00000554  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 24 .text.ui_display_switch 0000009e  00000000  00000000  00000624  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 25 .text.ui_file_chooser 0000017c  00000000  00000000  000006c4  2**2
+                  CONTENTS, ALLOC, LOAD, RELOC, READONLY, CODE
+ 26 .rodata.__func__$7582 00000010  00000000  00000000  00000840  2**0
+                  CONTENTS, ALLOC, LOAD, READONLY, DATA
+ 27 .bss.ugui     00000004  00000000  00000000  00000850  2**2
+                  ALLOC
+ 28 .debug_frame  00000118  00000000  00000000  00000850  2**2
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 29 .debug_info   00001477  00000000  00000000  00000968  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 30 .debug_abbrev 00000396  00000000  00000000  00001ddf  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 31 .debug_loc    0000077b  00000000  00000000  00002175  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 32 .debug_aranges 00000070  00000000  00000000  000028f0  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 33 .debug_ranges 000000d8  00000000  00000000  00002960  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 34 .debug_line   00000858  00000000  00000000  00002a38  2**0
+                  CONTENTS, RELOC, READONLY, DEBUGGING
+ 35 .debug_str    0000082d  00000000  00000000  00003290  2**0
+                  CONTENTS, READONLY, DEBUGGING
+ 36 .comment      0000003c  00000000  00000000  00003abd  2**0
+                  CONTENTS, READONLY
+ 37 .xtensa.info  00000038  00000000  00000000  00003af9  2**0
+                  CONTENTS, READONLY
+ 38 .xt.lit       00000058  00000000  00000000  00003b31  2**0
+                  CONTENTS, RELOC, READONLY
+ 39 .xt.prop      000003cc  00000000  00000000  00003b89  2**0
+                  CONTENTS, RELOC, READONLY

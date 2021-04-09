@@ -200,8 +200,8 @@ static void set_palette(rgb_t *pal)
     for (i = 0; i < 256; i++)
     {
         c = (pal[i].b >> 3) + ((pal[i].g >> 2) << 5) + ((pal[i].r >> 3) << 11);
-        myPalette[i] = (c >> 8) | ((c & 0xff) << 8);
-        //myPalette[i]=c;
+        //myPalette[i] = (c >> 8) | ((c & 0xff) << 8);
+        myPalette[i] = c;
     }
 }
 
@@ -263,7 +263,8 @@ static void videoTask(void *arg)
         {
             //write_frame_rectangleLE(32,0,256,240,NULL);
             int ret = showMenu();
-            if (batlevel==0)ret=MENU_SAVE_EXIT;
+            if (batlevel == 0)
+                ret = MENU_SAVE_EXIT;
             switch (ret)
             {
             case MENU_SAVE_STATE:
@@ -524,7 +525,7 @@ int osd_init()
     //renderGfx(32+256,0,32,240,gb_frame.pixel_data,32,0,gb_frame.width);
 
     vidQueue = xQueueCreate(1, sizeof(bitmap_t *));
-    xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024*3, NULL, 5, NULL, 1);
+    xTaskCreatePinnedToCore(&videoTask, "videoTask", 1024 * 3, NULL, 5, NULL, 1);
     osd_initinput();
     return 0;
 }

@@ -75,7 +75,7 @@ typedef enum PlayingMode
 	PlayingModeMax,
 } PlayingMode;
 
-static const char *playing_mode_str[PlayingModeMax] = {"Normal", "Repeat Song", "Repeat All"};
+static const char *playing_mode_str[PlayingModeMax] = {"普通", "单曲循环", "全部循环"};
 
 // Owned by player task, can only be modified/written to by player task
 typedef struct PlayerState
@@ -96,7 +96,7 @@ typedef struct PlayerState
 	PlayingMode playing_mode;
 } PlayerState;
 static PlayerState player_state = {
-		0,
+	0,
 };
 static bool keys_locked = false;
 static bool backlight_on = true;
@@ -174,10 +174,10 @@ typedef enum PlayerResult
 	PlayerResultNone = 0,
 	PlayerResultError,
 
-	PlayerResultDone,			///< Playing the song completed, same effect as NextSong
+	PlayerResultDone,	  ///< Playing the song completed, same effect as NextSong
 	PlayerResultNextSong, ///< User requested skipping of next song
 	PlayerResultPrevSong, ///< User requested to play previous song
-	PlayerResultStop,			///< User exited player/requested player termination
+	PlayerResultStop,	  ///< User exited player/requested player termination
 } PlayerResult;
 
 static void push_audio_event(const AudioPlayerEvent audio_event)
@@ -243,7 +243,7 @@ static PlayerResult play_song(const Song *const song)
 	PlayerState *state = &player_state;
 	AudioInfo info;
 	void *acodec = NULL;
-static unsigned int cou=0;
+	static unsigned int cou = 0;
 
 	printf("Playing file: %s, codec: %d\n", song->filepath, song->codec);
 	AudioDecoder *decoder = acodec_get_decoder(song->codec);
@@ -291,7 +291,7 @@ static unsigned int cou=0;
 		// {
 		// 	cou=0;
 		// 	//draw_player(&player_state);
-		// 	if (batlevel>4) 
+		// 	if (batlevel>4)
 		// 	{
 		// 		drawBattery(100);
 		// 	}
@@ -389,8 +389,7 @@ static void player_task(void *arg)
 static void draw_player(const PlayerState *const state)
 {
 	ui_clear_screen();
-
-	renderGraphics((320 - 150) / 2, 0, 128, 416, 38, 23);
+	renderGraphics(0, 0, 0, 346, 240, 192);
 
 	UG_FontSelect(&FONT_8X12);
 
@@ -398,28 +397,20 @@ static void draw_player(const PlayerState *const state)
 	settings_load(SettingAudioVolume, &volume);
 	char volStr[3];
 	sprintf(volStr, "%i", volume);
-	if (volume == 0)
-	{
-		UG_SetForecolor(C_RED);
-		UG_SetBackcolor(C_BLACK);
-	}
-	else
-	{
-		UG_SetForecolor(C_WHITE);
-		UG_SetBackcolor(C_BLACK);
-	}
-	UG_PutString(25, 12, volStr);
 
-	UG_SetForecolor(C_WHITE);
-	UG_SetBackcolor(C_BLACK);
+	UG_SetForecolor(ui_get_word_color());
+	UG_SetBackcolor(ui_get_title_color());
+
+	UG_PutString(30, 8, volStr);
+
+	UG_SetForecolor(ui_get_word_color());
+	UG_SetBackcolor(ui_get_title_color());
 
 	battery_state bat_state;
 	battery_level_read(&bat_state);
 
 	drawVolume(volume);
 	drawBattery(bat_state.percentage);
-
-	UG_FontSelect(&FONT_6X8);
 
 	const int line_height = 16;
 	short y = 34;
@@ -428,42 +419,28 @@ static void draw_player(const PlayerState *const state)
 	Song *song = &state->playlist[state->playlist_index];
 
 	char truncnm[MAX_FILENAME];
-
 	// Song name
 	strncpy(truncnm, song->filename, MAX_FILENAME);
 	truncnm[MAX_FILENAME - 1] = 0;
-	snprintf(str_buf, 300, "Song: %s", truncnm);
-	UG_PutString(3, y, str_buf);
-	y += 17;
+	snprintf(str_buf, 300, "%s", truncnm);
+	UG_FontSelect(&FONT_8X12);
+	UG_PutSingleString(3, y, str_buf);
+	y += 36;
 
 	// Song playmode
-	snprintf(str_buf, 300, "Playing Mode: %s", playing_mode_str[state->playing_mode]);
+	snprintf(str_buf, 300, "播放模式: %s", playing_mode_str[state->playing_mode]);
 	UG_PutString(3, y, str_buf);
-	y += line_height;
+	y += 18;
 
 	// Show volume
-	snprintf(str_buf, 300, "Volume: %d%%", audio_volume_get());
+	snprintf(str_buf, 300, "音量: %d%%", audio_volume_get());
 	UG_PutString(3, y, str_buf);
-	y += line_height;
-
-	renderGraphics(10, y, 0, 439, 120, 106);
-
-	// Show Playing or paused/DAC on image
-	UG_PutString(160, y + 31, state->playing ? "A: Pause" : "A: Continue");
-	UG_PutString(160, y + 70, "B: Go Back");
-	//UG_PutString(222, y + 89, speaker_on ? "Speaker off" : "Speaker on");
-	y += 115;
-
-	// Explain start and stop button behaviour
-	//UG_PutString(3, y, "SELECT: Toggle screen off");
-	y += line_height + 3;
-	//UG_PutString(3, y, "START: Cycle through Playing Mode");
 
 	ui_flush();
 }
 
 static void handle_keypress(event_keypad_t keys, bool *quit)
-{	
+{
 	if (!keys.last_state.values[GAMEPAD_INPUT_A] && keys.state.values[GAMEPAD_INPUT_A])
 		player_send_cmd(PlayerCmdPause);
 	if (!keys.last_state.values[GAMEPAD_INPUT_B] && keys.state.values[GAMEPAD_INPUT_B])
@@ -482,7 +459,7 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 		int vol = audio_volume_get() - 5;
 		if (vol < 1)
 			vol = 1;
-			audio_volume_set(vol);
+		audio_volume_set(vol);
 
 		if (vol == 1)
 			audio_terminate();
@@ -497,7 +474,7 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 		player_send_cmd(PlayerCmdToggleLoopMode);
 	if (!keys.last_state.values[GAMEPAD_INPUT_SELECT] && keys.state.values[GAMEPAD_INPUT_SELECT])
 	{
-		set_display_brightness(backlight_on ? 0 : 50);
+		set_display_brightness(backlight_on ? -5 : 50);
 		backlight_on = !backlight_on;
 	}
 	if (!keys.last_state.values[GAMEPAD_INPUT_L] && keys.state.values[GAMEPAD_INPUT_L])
@@ -506,7 +483,6 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 		speaker_on ? audio_amp_enable() : audio_amp_disable();
 		draw_player(&player_state);
 	}
-
 }
 
 #define MAX_SONGS 1024
@@ -600,7 +576,6 @@ static void load_settings(PlayerState *state)
 
 int audio_player(AudioPlayerParam params)
 {
-		
 
 	event_init();
 	memset(&player_state, 0, sizeof(PlayerState));

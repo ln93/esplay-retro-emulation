@@ -17,6 +17,7 @@
 #include "soc/rtc.h"
 #include "soc/rtc_cntl_reg.h"
 
+#include "stdio.h"
 #include "settings.h"
 #include "gamepad.h"
 #include "event.h"
@@ -31,18 +32,18 @@
 #include "file_ops.h"
 
 #define SCROLLSPD 64
-#define NUM_EMULATOR 7
+#define NUM_EMULATOR 8
 #define AUDIO_FILE_PATH "/sd/audio"
 
-char emu_dir[6][10] = {"nes", "gb", "gbc", "sms", "gg", "col"};
-char emu_name[6][20] = {"Nintendo", "Gameboy", "Gameboy Color", "Sega Master System", "Game Gear", "Coleco Vision"};
-int emu_slot[6] = {1, 2, 2, 3, 3, 3};
+char emu_dir[7][10] = {"nes", "gb", "gbc", "sms", "gg", "col", "txt"};
+char emu_name[7][20] = {"Nintendo", "Gameboy", "Gameboy Color", "Sega Master System", "Game Gear", "Coleco Vision", "TXT Reader"};
+int emu_slot[7] = {1, 2, 2, 3, 3, 3, 4};
 char *base_path = "/sd/roms/";
 battery_state bat_state;
 int num_menu = 6;
-char menu_text[6][20] = {"WiFi AP *", "Volume", "Brightness", "Upscaler", "Scale Alg", "Quit"};
-char scaling_text[3][20] = {"Native", "Normal", "Stretch"};
-char scaling_alg_text[3][20] = {"Nearest Neighbor", "Bilinier Intrp.", "Box Filtered"};
+char menu_text[6][20] = {"WiFi热点", "音量", "亮度", "缩放", "缩放算法", "退出"};
+char scaling_text[3][20] = {"原生点对点", "等比例缩放", "拉伸至全屏"};
+char scaling_alg_text[3][20] = {"最近邻插值", "双线性插值", "Box Filtered"};
 int32_t wifi_en = 0;
 int32_t volume = 25;
 int32_t bright = 50;
@@ -51,6 +52,76 @@ int32_t scale_alg = BILINIER_INTERPOLATION;
 extern uint16_t freq;
 extern const unsigned char fontzn[261696];
 esp_err_t start_file_server(const char *base_path);
+long write_txt_frame(FILE *txt, long PTR, char *FILENAME)
+{
+    short x, y, xpos, ypos, outputWidth, outputHeight;
+    int sending_line = -1;
+    int calc_line = 0;
+    ui_clear_screen();
+    UG_FillFrame(0, 0, 240, 26, ui_get_title_color());
+    UG_FillFrame(0, 27, 240, 192, ui_get_background_color());
+    UG_SetForecolor(ui_get_word_color());
+    UG_SetBackcolor(ui_get_title_color());
+    UG_PutSingleString(10, 8, FILENAME + 13);
+    if (!txt)
+    {
+        return 0;
+    }
+    else
+    {
+        int dPTR = 0;
+        char data[256];
+        memset(data, '\n', 256);
+        fseek(txt, PTR, SEEK_SET);
+        printf("Try Open TXT. PTR:%ld\n", PTR);
+        int FetchDataLen = fread(data, 1, 256, txt);
+        printf("Open TXT Success. Length:%d\n", FetchDataLen);
+        char *ScreenLine;
+        for (int lineCount = 0; lineCount < 9; lineCount++)
+        {
+
+            char line[32];
+            memset(line, '\n', 32);
+            int singleLength;
+            for (singleLength = 0; singleLength < 25;)
+            {
+                if (dPTR >= FetchDataLen)
+                    break;
+                char chr = data[dPTR];
+                if (chr >= 0x80)
+                {
+                    line[singleLength++] = data[dPTR++];
+                    line[singleLength++] = data[dPTR++];
+                }
+                else if (chr == '\n')
+                {
+                    line[singleLength++] = data[dPTR++];
+                    break;
+                }
+                else
+                {
+                    line[singleLength++] = data[dPTR++];
+                }
+            }
+            printf("Print Line:%d:%d\n", lineCount, singleLength);
+            line[singleLength] = '\n';
+            ScreenLine = malloc(singleLength + 1);
+            memset(ScreenLine, '\n', singleLength + 1);
+            for (int p = 0; p < singleLength + 1; p++)
+            {
+                ScreenLine[p] = line[p];
+            }
+            UG_SetForecolor(ui_get_word_color());
+            UG_SetBackcolor(ui_get_background_color());
+            UG_PutSingleString(10, 27 + lineCount * 18, ScreenLine);
+            free(ScreenLine);
+        }
+        ui_flush();
+        battery_level_read(&bat_state);
+        drawBattery(bat_state.percentage);
+        return (dPTR);
+    }
+}
 
 esp_err_t event_handler(void *ctx, system_event_t *event)
 {
@@ -107,63 +178,36 @@ static void handleCharging()
 static void drawHomeScreen()
 {
     ui_clear_screen();
-    UG_FillFrame(0, 26, 239, 191, C_WHITE_SMOKE);
-    ;
-    UG_SetForecolor(C_YELLOW);
-    UG_SetBackcolor(C_BLACK);
+    UG_FillFrame(0, 0, 239, 191, ui_get_title_color());
+    UG_SetForecolor(ui_get_word_color());
+    UG_SetBackcolor(ui_get_title_color());
     char *title = "ESP32 Mini";
-    UG_PutString((240 / 2) - (strlen(title) * 9 / 2), 12, title);
-
     if (wifi_en)
     {
-        UG_SetForecolor(C_DARK_BLUE);
-        UG_SetBackcolor(C_WHITE_SMOKE);
-        title = "Wifi ON,http://192.168.4.1";
-        UG_PutString(0, 32, title);
+        title = "192.168.4.1";
     }
-
-    UG_SetForecolor(C_DARK_BLUE);
-    UG_SetBackcolor(C_WHITE_SMOKE);
-    UG_PutString(40, 50 + (56 * 2) + 13 - 25, "    Browse");
-    UG_PutString(160, 50 + (56 * 2) + 13 - 25, "  Select");
-    UG_PutString(160, 50 + (56 * 2) + 13 + 18 - 25, "  Resume");
-    UG_PutString(40, 50 + (56 * 2) + 13 + 18 - 25, "    Options");
-
-    UG_SetForecolor(C_WHITE_SMOKE);
-    UG_SetBackcolor(C_DARK_BLUE);
-    UG_FillRoundFrame(35, 50 + (56 * 2) + 13 - 1 - 25, 48 + (2 * 9) + 3, 50 + (56 * 2) + 13 + 11 - 25, 7, C_DARK_BLUE);
-    UG_PutString(40, 50 + (56 * 2) + 13 - 25, "< >");
-
-    UG_FillCircle(163, 50 + (56 * 2) + 13 + 5 - 25, 7, C_DARK_BLUE);
-    UG_PutString(160, 50 + (56 * 2) + 13 - 25, "A");
-
-    UG_FillCircle(163, 50 + (56 * 2) + 13 + 18 + 5 - 25, 7, C_DARK_BLUE);
-    UG_PutString(160, 50 + (56 * 2) + 13 + 18 - 25, "B");
-
-    UG_FillRoundFrame(35 - 9, 50 + (56 * 2) + 13 + 18 - 1 - 25, 48 + (3 * 9) + 3 - 9, 50 + (56 * 2) + 13 + 18 + 11 - 25, 7, C_DARK_BLUE);
-    UG_PutString(40 - 9, 50 + (56 * 2) + 13 + 18 - 25, "MENU");
-
+    UG_PutString((240 / 2) - (strlen(title) * 9 / 2), 12, title);
     uint8_t volume = 25;
     settings_load(SettingAudioVolume, &volume);
     char volStr[3];
     sprintf(volStr, "%i", volume);
     if (volume == 0)
     {
-        UG_SetForecolor(C_RED);
-        UG_SetBackcolor(C_BLACK);
+        UG_SetForecolor(ui_get_word_color());
+        UG_SetBackcolor(ui_get_title_color());
     }
     else
     {
-        UG_SetForecolor(C_WHITE);
-        UG_SetBackcolor(C_BLACK);
+        UG_SetForecolor(ui_get_word_color());
+        UG_SetBackcolor(ui_get_title_color());
     }
-    UG_PutString(25, 12, volStr);
+    UG_PutString(30, 8, volStr);
     battery_level_read(&bat_state);
     drawVolume(volume);
     drawBattery(bat_state.percentage);
     if (wifi_en)
     {
-        renderGraphics(320 - (50), 0, 24 * 7, 0, 24, 24);
+        renderGraphics(240 - (55), 3, 24 * 7, 0, 24, 24);
     }
 }
 
@@ -180,39 +224,39 @@ static void showOptionPage(int selected)
 {
     ui_clear_screen();
     /* Header */
-    UG_FillFrame(0, 0, 240 - 1, 16 - 1, C_BLUE);
-    UG_SetForecolor(C_WHITE);
-    UG_SetBackcolor(C_BLUE);
+    UG_FillFrame(0, 0, 240 - 1, 16 - 1, ui_get_title_color());
+    UG_SetForecolor(ui_get_word_color());
+    UG_SetBackcolor(ui_get_title_color());
     char *msg = "Device Options";
     //UG_PutString((240 / 2) - (strlen(msg) * 9 / 2), 2, msg);
     /* End Header */
 
     /* Footer */
-    UG_FillFrame(0, 192 - 16 - 1, 240 - 1, 192 - 1, C_BLUE);
-    UG_SetForecolor(C_WHITE);
-    UG_SetBackcolor(C_BLUE);
+    UG_FillFrame(0, 192 - 16 - 1, 240 - 1, 192 - 1, ui_get_title_color());
+    UG_SetForecolor(ui_get_word_color());
+    UG_SetBackcolor(ui_get_title_color());
     msg = "     Browse      Change       ";
     //UG_PutString((240 / 2) - (strlen(msg) * 9 / 2), 192 - 15, msg);
 
-    UG_FillRoundFrame(15, 192 - 15 - 1, 15 + (5 * 9) + 8, 237, 7, C_BLUE);
-    UG_SetForecolor(C_WHITE);
-    UG_SetBackcolor(C_BLUE);
+    UG_FillRoundFrame(15, 192 - 15 - 1, 15 + (5 * 9) + 8, 237, 7, ui_get_title_color());
+    UG_SetForecolor(ui_get_word_color());
+    UG_SetBackcolor(ui_get_title_color());
     //UG_PutString(20, 192 - 15, "Up/Dn");
 
-    UG_FillRoundFrame(140, 192 - 15 - 1, 140 + (3 * 9) + 8, 237, 7, C_BLUE);
+    UG_FillRoundFrame(140, 192 - 15 - 1, 140 + (3 * 9) + 8, 237, 7, ui_get_title_color());
     //UG_PutString(145, 192 - 15, "< >");
     /* End Footer */
 
-    UG_FillFrame(0, 16, 240 - 1, 192 - 20, C_BLACK);
+    UG_FillFrame(0, 16, 240 - 1, 192 - 20, ui_get_background_color());
 
     UG_SetForecolor(C_RED);
-    UG_SetBackcolor(C_BLACK);
+    UG_SetBackcolor(ui_get_background_color());
     //UG_PutString(0, 192 - 30, "* restart required");
     esp_app_desc_t *desc = esp_ota_get_app_description();
     char idfVer[512];
     sprintf(idfVer, "IDF %s", desc->idf_ver);
-    UG_SetForecolor(C_WHITE);
-    UG_SetBackcolor(C_BLACK);
+    UG_SetForecolor(ui_get_word_color());
+    UG_SetBackcolor(ui_get_background_color());
     //UG_PutString(0, 240 - 72, desc->project_name);
     //UG_PutString(0, 240 - 58, desc->version);
     //UG_PutString(0, 240 - 44, idfVer);
@@ -221,9 +265,9 @@ static void showOptionPage(int selected)
     {
         short top = 18 + i * 15 + 8;
         if (i == selected)
-            UG_SetForecolor(C_YELLOW);
+            UG_SetForecolor(ui_get_title_color());
         else
-            UG_SetForecolor(C_WHITE);
+            UG_SetForecolor(ui_get_word_color());
 
         UG_PutString(0, top, menu_text[i]);
 
@@ -232,21 +276,21 @@ static void showOptionPage(int selected)
         {
         case 0:
             if (i == selected)
-                ui_display_switch(192 - 13, top, wifi_en, C_YELLOW, C_BLUE, C_GRAY);
+                ui_display_switch(192 - 13, top, wifi_en, ui_get_title_color(), ui_get_word_color(), ui_get_background_color());
             else
-                ui_display_switch(192 - 13, top, wifi_en, C_WHITE, C_BLUE, C_GRAY);
+                ui_display_switch(192 - 13, top, wifi_en, ui_get_word_color(), ui_get_title_color(), ui_get_background_color());
             break;
         case 1:
             if (i == selected)
-                ui_display_seekbar((240 - 103), top + 4, 100, (volume * 100) / 100, C_YELLOW, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (volume * 100) / 100, ui_get_title_color(), ui_get_background_color());
             else
-                ui_display_seekbar((240 - 103), top + 4, 100, (volume * 100) / 100, C_WHITE, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (volume * 100) / 100, ui_get_word_color(), ui_get_background_color());
             break;
         case 2:
             if (i == selected)
-                ui_display_seekbar((240 - 103), top + 4, 100, (bright * 100) / 100, C_YELLOW, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (bright * 100) / 100, ui_get_title_color(), ui_get_background_color());
             else
-                ui_display_seekbar((240 - 103), top + 4, 100, (bright * 100) / 100, C_WHITE, C_RED);
+                ui_display_seekbar((240 - 103), top + 4, 100, (bright * 100) / 100, ui_get_word_color(), ui_get_background_color());
             break;
         case 3:
             UG_PutString(239 - (strlen(scaling_text[scaling]) * 9), top, scaling_text[scaling]);
@@ -383,7 +427,111 @@ static int showOption()
 
     return 0;
 }
+void slotRenderGraphics(int item, int tick, int bg_freq, int form_freq)
+{
+    //render background
+    renderGraphics(0, 32, 0, 24 + ((tick / bg_freq) % 2) * 161, 240, 160);
 
+    //render mouse
+    int mouseNo = (tick / form_freq) % 4;
+    int mouseBatch = mouseNo / 2; //used to skip the purple line
+    renderGraphicsAdd((item % 4) * 60, 32 + (item / 4) * 80, 240, 24 + (mouseNo)*80 + mouseBatch, 60, 80);
+}
+const char *SD_BASE_PATH = "/sd";
+static void SaveTxtState(long FilePTR)
+{
+
+    // Save sram
+    char *romPath = settings_load_str(SettingRomPath);
+
+    if (romPath)
+    {
+        char *fileName = system_util_GetFileName(romPath);
+        if (!fileName)
+        {
+            system_application_set(0);
+            esp_restart();
+        }
+
+        char *pathName = sdcard_create_savefile_path(SD_BASE_PATH, fileName);
+        if (!pathName)
+        {
+            printf("%s: can't generate path, save failed\n", __func__);
+            system_application_set(0);
+            esp_restart();
+        }
+
+        FILE *f = fopen(pathName, "w");
+        if (f == NULL)
+        {
+            printf("%s: fopen save failed\n", __func__);
+            {
+                system_application_set(0);
+                esp_restart();
+            }
+        }
+        else
+        {
+            fprintf(f, "%ld", FilePTR);
+            fclose(f);
+
+            printf("SaveState: savestate OK.\n");
+        }
+        fclose(f);
+
+        printf("%s: savestate OK.\n", __func__);
+
+        free(pathName);
+        free(fileName);
+        free(romPath);
+    }
+    else
+    {
+        free(romPath);
+    }
+}
+
+static long LoadTxtState()
+{
+    long FilePTR = 0;
+    char *romName = settings_load_str(SettingRomPath);
+    if (romName)
+    {
+
+        char *fileName = system_util_GetFileName(romName);
+        if (!fileName)
+        {
+            printf("LoadState: save fopen load failed, treat as a new book.\n");
+            return (0);
+        }
+
+        char *pathName = sdcard_create_savefile_path(SD_BASE_PATH, fileName);
+        if (!pathName)
+        {
+            printf("LoadState: save fopen load failed, treat as a new book.\n");
+            return (0);
+        }
+        else
+        {
+            FILE *f = fopen(pathName, "r");
+            if (f == NULL)
+            {
+                printf("LoadState: save fopen load failed, treat as a new book.\n");
+            }
+            else
+            {
+                fscanf(f, "%ld", &FilePTR);
+                fclose(f);
+            }
+        }
+
+        free(pathName);
+        free(fileName);
+        free(romName);
+        return (FilePTR);
+    }
+    return (0);
+}
 //----------------------------------------------------------------
 void app_main(void)
 { //char m=9;
@@ -496,80 +644,36 @@ void app_main(void)
     gamepad_read(&prevKey);
     gamepad_read(&prevKey);
     //    printf("first time read key is %d \n",prevKey.values[GAMEPAD_INPUT_MENU]);
+    ushort GFX_TICK = 0;
+    ushort form_freq = 3;
+    ushort bg_freq = 15;
     while (1)
     {
+        GFX_TICK++;
         input_gamepad_state joystick;
         gamepad_read(&joystick);
-        if (!prevKey.values[GAMEPAD_INPUT_RIGHT] && joystick.values[GAMEPAD_INPUT_RIGHT] && !scroll)
+        if (!prevKey.values[GAMEPAD_INPUT_RIGHT] && joystick.values[GAMEPAD_INPUT_RIGHT])
         {
             menuItem++;
             if (menuItem > NUM_EMULATOR - 1)
                 menuItem = 0;
-            scroll = -SCROLLSPD;
         }
-        if (!prevKey.values[GAMEPAD_INPUT_LEFT] && joystick.values[GAMEPAD_INPUT_LEFT] && !scroll)
+        if (!prevKey.values[GAMEPAD_INPUT_LEFT] && joystick.values[GAMEPAD_INPUT_LEFT])
         {
             menuItem--;
             if (menuItem < 0)
                 menuItem = NUM_EMULATOR - 1;
-            scroll = SCROLLSPD;
         }
-        if (scroll > 0)
-            scroll += SCROLLSPD;
-        if (scroll < 0)
-            scroll -= SCROLLSPD;
-        if (scroll > 240 || scroll < -240)
+        if ((!prevKey.values[GAMEPAD_INPUT_UP] && joystick.values[GAMEPAD_INPUT_UP]) || (!prevKey.values[GAMEPAD_INPUT_DOWN] && joystick.values[GAMEPAD_INPUT_DOWN]))
         {
-            prevItem = menuItem;
-            scroll = 0;
-            doRefresh = 1;
+            menuItem += NUM_EMULATOR / 2;
+            menuItem = menuItem % (NUM_EMULATOR);
         }
-        if (prevItem != menuItem)
-            renderGraphics(scroll, 78, 40, (56 * prevItem) + 24, 240, 56);
-        if (scroll)
-        {
-            renderGraphics(scroll + ((scroll > 0) ? -240 : 240), 78, 40, (56 * menuItem) + 24, 240, 56);
-            doRefresh = 1;
-            lastUpdate = 0;
-        }
-        else
-        {
-            int update = 1;
-            if (update != lastUpdate)
-            {
-                if (menuItem < 6)
-                {
-                    char *path = malloc(strlen(base_path) + strlen(emu_dir[menuItem]) + 1);
-                    strcpy(path, base_path);
-                    strcat(path, emu_dir[menuItem]);
-                    int count = sdcard_get_files_count(path);
-                    char text[320];
-                    UG_SetForecolor(C_DARK_BLUE);
-                    UG_SetBackcolor(C_WHITE_SMOKE);
-                    sprintf(text, "%i games available", count);
-                    UG_FillFrame(0, 64, 239, 76, C_WHITE_SMOKE);
-                    UG_PutString((240 / 2) - (strlen(text) * 9 / 2), 64, text);
-                    renderGraphics(0, 78, 40, (56 * menuItem) + 24, 240, 56);
-                }
-                else
-                {
-                    UG_FillFrame(0, 64, 239, 76, C_WHITE_SMOKE);
-                    renderGraphics(0, 78, 40, (56 * menuItem) + 24, 240, 56);
-                }
 
-                lastUpdate = update;
-            }
-            //Render arrows
-            int t = xTaskGetTickCount() / (400 / portTICK_PERIOD_MS);
-            t = (t & 1);
-            if (t != oldArrowsTick)
-            {
-                doRefresh = 1;
-                renderGraphics(10, 90, t ? 0 : 32, 416, 32, 23);
-                renderGraphics(200, 90, t ? 64 : 96, 416, 32, 23);
-                oldArrowsTick = t;
-            }
-        }
+        //render box
+
+        slotRenderGraphics(menuItem, GFX_TICK, bg_freq, form_freq);
+
         if (!prevKey.values[GAMEPAD_INPUT_A] && joystick.values[GAMEPAD_INPUT_A])
         {
             if (menuItem < 6)
@@ -581,7 +685,7 @@ void app_main(void)
                 char *path = malloc(strlen(base_path) + strlen(emu_dir[menuItem]) + 1);
                 strcpy(path, base_path);
                 strcat(path, emu_dir[menuItem]);
-                char *filename = ui_file_chooser(path, ext, 0, emu_name[menuItem]);
+                char *filename = ui_file_chooser_usercolor(path, ext, 0, emu_name[menuItem], ui_get_word_color(), ui_get_background_color(), ui_get_title_color());
                 if (filename)
                 {
                     settings_save_str(SettingRomPath, filename);
@@ -592,6 +696,58 @@ void app_main(void)
                     esp_restart();
                 }
                 free(path);
+            }
+            else if (menuItem == 6) //txtreader
+            {
+                char ext[4];
+                strcpy(ext, ".");
+                strcat(ext, emu_dir[menuItem]);
+
+                char *path = malloc(strlen(base_path) + strlen(emu_dir[menuItem]) + 1);
+                strcpy(path, base_path);
+                strcat(path, emu_dir[menuItem]);
+                char *filename = ui_file_chooser_usercolor(path, ext, 0, emu_name[menuItem], ui_get_word_color(), ui_get_background_color(), ui_get_title_color());
+                if (filename)
+                {
+                    settings_save_str(SettingRomPath, filename);
+                    char *romName = settings_load_str(SettingRomPath);
+                    FILE *txt;
+                    printf("TXT:%s\n", romName);
+                    txt = fopen(romName, "r");
+
+                    long PTR = LoadTxtState();
+                    long dPTR = 0;
+                    dPTR = write_txt_frame(txt, PTR, filename);
+                    while (1)
+                    {
+                        vTaskDelay(10);
+                        prevKey = joystick;
+                        gamepad_read(&joystick);
+                        if (joystick.values[GAMEPAD_INPUT_B])
+                        {
+                            SaveTxtState(PTR);
+                            break;
+                        }
+                        if (!prevKey.values[GAMEPAD_INPUT_RIGHT] && joystick.values[GAMEPAD_INPUT_RIGHT])
+                        {
+                            PTR = PTR + dPTR;
+                            dPTR = write_txt_frame(txt, PTR, filename);
+                        }
+                        if (!prevKey.values[GAMEPAD_INPUT_LEFT] && joystick.values[GAMEPAD_INPUT_LEFT])
+                        {
+                            if (dPTR > 10)
+                                PTR -= dPTR;
+                            else
+                                PTR -= 10;
+                            if (PTR < 0)
+                                PTR = 0;
+                            dPTR = write_txt_frame(txt, PTR, filename);
+                        }
+                    }
+                    free(romName);
+                    system_application_set(0);
+                    esp_restart();
+                }
             }
             else
             {
