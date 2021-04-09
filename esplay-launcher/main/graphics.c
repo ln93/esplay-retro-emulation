@@ -165,3 +165,32 @@ void drawVolume(int volume)
     else
         renderGraphics(5, 3, 24 * 8, 0, 24, 24);
 }
+
+void drawWave(int x, int y, int waveSize, char *waveValue) //value:0-5 wavesize: 8
+{
+    //wave dot size 2x2, border width 1
+    char dot = 2, border = 1;
+
+    //use word color as dot color
+    ushort dotcolor = ui_get_word_color();
+
+    uint16_t *fb = ui_get_fb();
+
+    for (int w = 0; w < waveSize; w++)
+    {
+        int xx = x + w * (dot + border);
+        //draw Hline dot according to waveValue
+        for (int h = 0; waveValue[w] > h; h++)
+        {
+            int yy = y + (5 - h) * (dot + border);
+            //draw dot
+            for (int dx = xx; dx < xx + dot; dx++)
+            {
+                for (int dy = yy; dy < yy + dot; dy++)
+                {
+                    fb[dx + 240 * dy] = dotcolor;
+                }
+            }
+        }
+    }
+}

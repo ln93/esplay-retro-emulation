@@ -82,7 +82,6 @@ static uint16_t getPixelNes(const uint8_t *bufs, int x, int y, int w1, int h1, i
         return (col >> 8) | ((col & 0xff) << 8);
     }
 }
-char interlaced = 1;
 void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
 {
     short x, y, xpos, ypos, outputWidth, outputHeight;
@@ -91,7 +90,6 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
     int temp1, temp2;
     int x_ratio, y_ratio;
     static const unsigned char *pbat;
-    interlaced = 1 - interlaced;
     if (batlevel > 4)
     {
         pbat = &bat[24 * 16 * 2 * 0];
@@ -180,7 +178,7 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
             x_ratio = (int)(((NES_FRAME_WIDTH - 1) << 16) / (outputWidth - 1));
             y_ratio = (int)(((NES_FRAME_HEIGHT - 1) << 16) / (outputHeight - 1));
 
-            for (y = interlaced; y < outputHeight; y += 2)
+            for (y = 0; y < outputHeight; y++)
             {
                 int i = 0;
                 int index = (i)*outputWidth;

@@ -5040,6 +5040,7 @@ void UG_Putcn(char chr, char chrb, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc)
 {
    _UG_Putcn(chr, chrb, x, y, fc, bc, &gui->font);
 }
+
 void UG_PutSingleString(UG_S16 x, UG_S16 y, char *str)
 {
    UG_S16 xp, yp;
@@ -5096,6 +5097,69 @@ void UG_PutSingleString(UG_S16 x, UG_S16 y, char *str)
          }
       }
    }
+}
+int StringSkip(char *str, int ptr)
+{
+   if (str[ptr] >= 0x80)
+   {
+      return (ptr + 2);
+   }
+   else if (str[ptr] == '\n')
+   {
+      return (ptr + 0);
+   }
+   else
+   {
+      return (ptr + 1);
+   }
+}
+void UG_PutCycleSingleString(UG_S16 displayWordlength, UG_S16 cycle, UG_S16 x, UG_S16 y, char *str)
+//DisplayWordlength is how much charactor(English) should be displayed.
+//cycle provided should be ++ every frame.
+{
+   //skip the head of string
+   int singleLength;
+   int wordLength;
+   for (int i = 0; i < 255; i++)
+   {
+      wordLength = i;
+      if (str[i] == '\n' || str[i] == 0)
+      {
+         break;
+      }
+   }
+   if (displayWordlength > wordLength)
+   {
+      UG_PutSingleString(x, y, str);
+      return;
+   }
+   cycle = cycle % (wordLength - displayWordlength + 2);
+   int skip = 0;
+   for (int i = 0; i < cycle; i++)
+   {
+      skip = StringSkip(str, skip);
+   }
+   //generate string to display
+   char displayStr[64];
+   int i;
+   for (i = 0; i < displayWordlength;)
+   {
+      displayStr[i] = str[skip];
+      skip++;
+      i++;
+      if (displayStr[i] >= 0x80)
+      {
+         displayStr[i] = str[skip];
+         skip++;
+         i++;
+      }
+      else if (displayStr[i] == '\n')
+         break;
+   }
+   //add \n
+   displayStr[i] = '\n';
+
+   UG_PutSingleString(x, y, displayStr);
 }
 
 void UG_PutString(UG_S16 x, UG_S16 y, char *str)

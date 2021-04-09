@@ -185,6 +185,11 @@ static void push_audio_event(const AudioPlayerEvent audio_event)
 	event_t ev = {.audio_player.head.type = EVENT_TYPE_AUDIO_PLAYER, .audio_player.event = audio_event};
 	push_event(&ev);
 }
+static void push_update_event()
+{
+	event_t ev = {.audio_player.head.type = EVENT_TYPE_UPDATE};
+	push_event(&ev);
+}
 
 /// Handle a playercmd, return 1 if we should stop?
 static PlayerResult handle_cmd(PlayerState *const state, const AudioInfo info, const PlayerCmd received_cmd)
@@ -312,6 +317,7 @@ static PlayerResult play_song(const Song *const song)
 		{
 			n_frames = decoder->decode(acodec, audio_buf, (int)info.channels, info.buf_size);
 			audio_submit(audio_buf, n_frames);
+			push_update_event();
 		}
 		else
 		{
@@ -386,7 +392,7 @@ static void player_task(void *arg)
 	player_teardown_task();
 }
 
-static void draw_player(const PlayerState *const state)
+static void draw_player(const PlayerState *const state, int cycle)
 {
 	ui_clear_screen();
 	renderGraphics(0, 0, 0, 346, 240, 192);
@@ -424,7 +430,8 @@ static void draw_player(const PlayerState *const state)
 	truncnm[MAX_FILENAME - 1] = 0;
 	snprintf(str_buf, 300, "%s", truncnm);
 	UG_FontSelect(&FONT_8X12);
-	UG_PutSingleString(3, y, str_buf);
+	//UG_PutSingleString(3, y, str_buf);
+	UG_PutCycleSingleString(24, cycle, 3, y, str_buf); //use cycle display instead,size=24 EngChar or 12 chinese char
 	y += 36;
 
 	// Song playmode
@@ -436,6 +443,13 @@ static void draw_player(const PlayerState *const state)
 	snprintf(str_buf, 300, "“Ù¡ø: %d%%", audio_volume_get());
 	UG_PutString(3, y, str_buf);
 
+	//Generate waveValue(fake)
+	char waveValue[8];
+	for (int i = 0; i < 8; i++)
+	{
+		waveValue[i] = (rand() % 5) + 1;
+	}
+	drawWave(150, 70, 8, waveValue);
 	ui_flush();
 }
 
@@ -448,11 +462,11 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 	if (!keys.last_state.values[GAMEPAD_INPUT_UP] && keys.state.values[GAMEPAD_INPUT_UP])
 	{
 		int vol = audio_volume_get() + 5;
-		if (vol > 100)
-			vol = 100;
+		if (vol > 99)
+			vol = 99;
 		audio_volume_set(vol);
 		settings_save(SettingAudioVolume, (int32_t)vol);
-		draw_player(&player_state);
+		draw_player(&player_state, 0);
 	}
 	if (!keys.last_state.values[GAMEPAD_INPUT_DOWN] && keys.state.values[GAMEPAD_INPUT_DOWN])
 	{
@@ -464,7 +478,7 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 		if (vol == 1)
 			audio_terminate();
 		settings_save(SettingAudioVolume, (int32_t)vol);
-		draw_player(&player_state);
+		draw_player(&player_state, 0);
 	}
 	if (!keys.last_state.values[GAMEPAD_INPUT_RIGHT] && keys.state.values[GAMEPAD_INPUT_RIGHT])
 		player_send_cmd(PlayerCmdNext);
@@ -481,7 +495,7 @@ static void handle_keypress(event_keypad_t keys, bool *quit)
 	{
 		speaker_on = !speaker_on;
 		speaker_on ? audio_amp_enable() : audio_amp_disable();
-		draw_player(&player_state);
+		draw_player(&player_state, 0);
 	}
 }
 
@@ -592,12 +606,13 @@ int audio_player(AudioPlayerParam params)
 
 	bool quit = false;
 	event_t event;
+	unsigned int cycle = 0;
 	while (!quit)
 	{
-
 		// Handle inputs
 		if (wait_event(&event) < 0)
 		{
+			draw_player(&player_state, 0);
 			continue;
 		}
 		switch (event.type)
@@ -617,14 +632,16 @@ int audio_player(AudioPlayerParam params)
 			}
 			else
 			{
-				draw_player(&player_state);
+				draw_player(&player_state, 0);
 			}
 			break;
 		case EVENT_TYPE_QUIT:
 			quit = true;
 			break;
 		case EVENT_TYPE_UPDATE:
-			ui_flush();
+			cycle++;
+			if (cycle % 10 == 0)
+				draw_player(&player_state, cycle / 10);
 			break;
 		}
 	}
