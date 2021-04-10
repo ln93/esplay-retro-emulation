@@ -431,25 +431,24 @@ static void draw_player(const PlayerState *const state, int cycle)
 	snprintf(str_buf, 300, "%s", truncnm);
 	UG_FontSelect(&FONT_8X12);
 	//UG_PutSingleString(3, y, str_buf);
-	UG_PutCycleSingleString(24, cycle, 3, y, str_buf); //use cycle display instead,size=24 EngChar or 12 chinese char
-	y += 36;
-
+	UG_PutCycleSingleString(24, cycle, 20, y, str_buf); //use cycle display instead,size=24 EngChar or 12 chinese char
+	y += 20;
 	// Song playmode
 	snprintf(str_buf, 300, "播放模式: %s", playing_mode_str[state->playing_mode]);
-	UG_PutString(3, y, str_buf);
+	UG_PutString(20, y, str_buf);
 	y += 18;
 
 	// Show volume
 	snprintf(str_buf, 300, "音量: %d%%", audio_volume_get());
-	UG_PutString(3, y, str_buf);
+	UG_PutString(20, y, str_buf);
 
 	//Generate waveValue(fake)
-	char waveValue[8];
-	for (int i = 0; i < 8; i++)
+	char waveValue[11];
+	for (int i = 0; i < 14; i++)
 	{
 		waveValue[i] = (rand() % 5) + 1;
 	}
-	drawWave(150, 70, 8, waveValue);
+	drawWave(180, 70, 11, waveValue);
 	ui_flush();
 }
 

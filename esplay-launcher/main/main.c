@@ -116,9 +116,9 @@ long write_txt_frame(FILE *txt, long PTR, char *FILENAME)
             UG_PutSingleString(10, 27 + lineCount * 18, ScreenLine);
             free(ScreenLine);
         }
-        ui_flush();
         battery_level_read(&bat_state);
         drawBattery(bat_state.percentage);
+        ui_flush();
         return (dPTR);
     }
 }
@@ -186,7 +186,7 @@ static void drawHomeScreen()
     {
         title = "192.168.4.1";
     }
-    UG_PutString((240 / 2) - (strlen(title) * 9 / 2), 12, title);
+    UG_PutString((240 / 2) - (strlen(title) * 9 / 2), 10, title);
     uint8_t volume = 25;
     settings_load(SettingAudioVolume, &volume);
     char volStr[3];

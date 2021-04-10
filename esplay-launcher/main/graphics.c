@@ -169,7 +169,7 @@ void drawVolume(int volume)
 void drawWave(int x, int y, int waveSize, char *waveValue) //value:0-5 wavesize: 8
 {
     //wave dot size 2x2, border width 1
-    char dot = 2, border = 1;
+    char dot = 3, border = 1;
 
     //use word color as dot color
     ushort dotcolor = ui_get_word_color();

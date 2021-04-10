@@ -5521,6 +5521,8 @@ void _UG_Putcn(char chr, char chrb, UG_S16 x, UG_S16 y, UG_COLOR fc, UG_COLOR bc
    void (*push_pixel)(UG_COLOR);
    bt = (UG_U8)chr;
    bt2 = (UG_U8)chrb;
+   if (bt < 0xa1 || bt2 < 0xa1)
+      return;
    datap = &fontzn[32 * ((bt - 0xa0 - 1) * 94 + (bt2 - 0xa0 - 1))];
    yo = y;
    bn = 16; // (font->char_width;
