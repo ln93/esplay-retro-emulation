@@ -32,20 +32,20 @@ void system_sleep()
     // }
 
     // Configure button to wake
-//     printf("%s: Configuring deep sleep.\n", __func__);
-// #if 1
-//     esp_err_t err = esp_sleep_enable_ext0_wakeup(MENU, 0);
-// #else
-//     const int ext_wakeup_pin_1 = ODROID_GAMEPAD_IO_MENU;
-//     const uint64_t ext_wakeup_pin_1_mask = 1ULL << ext_wakeup_pin_1;
+    //     printf("%s: Configuring deep sleep.\n", __func__);
+    // #if 1
+    //     esp_err_t err = esp_sleep_enable_ext0_wakeup(MENU, 0);
+    // #else
+    //     const int ext_wakeup_pin_1 = ODROID_GAMEPAD_IO_MENU;
+    //     const uint64_t ext_wakeup_pin_1_mask = 1ULL << ext_wakeup_pin_1;
 
-//     esp_err_t err = esp_sleep_enable_ext1_wakeup(ext_wakeup_pin_1_mask, ESP_EXT1_WAKEUP_ALL_LOW);
-// #endif
-//     if (err != ESP_OK)
-//     {
-//         printf("%s: esp_sleep_enable_ext0_wakeup failed.\n", __func__);
-//         abort();
-//     }
+    //     esp_err_t err = esp_sleep_enable_ext1_wakeup(ext_wakeup_pin_1_mask, ESP_EXT1_WAKEUP_ALL_LOW);
+    // #endif
+    //     if (err != ESP_OK)
+    //     {
+    //         printf("%s: esp_sleep_enable_ext0_wakeup failed.\n", __func__);
+    //         abort();
+    //     }
     /*
     err = rtc_gpio_pullup_en(MENU);
     if (err != ESP_OK)
@@ -104,11 +104,11 @@ void system_led_set(int state)
 
 charging_state getChargeStatus()
 {
-    if(!gpio_get_level(USB_PLUG_PIN))
+    if (!gpio_get_level(USB_PLUG_PIN))
         return NO_CHRG;
     else
     {
-        if(!gpio_get_level(CHRG_STATE_PIN))
+        if (!gpio_get_level(CHRG_STATE_PIN))
             return CHARGING;
         else
             return FULL_CHARGED;
@@ -119,11 +119,11 @@ static void battery_monitor_task()
 {
     bool led_state = false;
     charging_state chrg;
-    int fullCtr=0;
-	//The LiIon charger sometimes goes back from 'full' to 'charging', which is
-	//confusing to the end user. This variable becomes true if the LiIon has indicated 'full'
-	//for a while, and it being true causes the 'full' icon to always show.
-	int fixFull=0;
+    int fullCtr = 0;
+    //The LiIon charger sometimes goes back from 'full' to 'charging', which is
+    //confusing to the end user. This variable becomes true if the LiIon has indicated 'full'
+    //for a while, and it being true causes the 'full' icon to always show.
+    int fixFull = 0;
     while (true)
     {
         if (battery_monitor_enabled)
@@ -172,7 +172,12 @@ static void battery_monitor_task()
     }
 }
 
+#if _IS_KT
+#define DEFAULT_VREF 1000
+#else
 #define DEFAULT_VREF 1100
+#endif
+
 void battery_level_init()
 {
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[LED1], PIN_FUNC_GPIO);
@@ -199,14 +204,14 @@ void battery_level_init()
 
 void battery_level_read(battery_state *out_state)
 {
-       if (batlevel>4)
-       {
-           out_state->percentage=125;
-       }
-       else
-       {
-           out_state->percentage=batlevel * 25;
-       }
+    if (batlevel > 4)
+    {
+        out_state->percentage = 125;
+    }
+    else
+    {
+        out_state->percentage = batlevel * 25;
+    }
 }
 
 void battery_level_force_voltage(float volts)

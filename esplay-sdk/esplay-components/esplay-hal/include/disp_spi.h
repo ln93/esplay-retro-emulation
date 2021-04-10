@@ -22,7 +22,7 @@ extern "C"
 #define CMD_ON 0
 #define DATA_ON 1
 
-#define _IS_KT 0
+#define _IS_KT 1
 
   /**********************
  *      TYPEDEFS
