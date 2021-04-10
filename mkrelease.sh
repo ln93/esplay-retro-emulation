@@ -23,9 +23,27 @@ fi
 
 fi
 
+#generate gfxtile
 ffmpeg -i ~/esplay-retro-emulation/assets/gfxTile.png -f rawvideo -pix_fmt rgb565 ~/esplay-retro-emulation/assets/tile.raw -y
 rm ~/esplay-retro-emulation/esplay-launcher/main/gfxTile.inc
 cat ~/esplay-retro-emulation/assets/tile.raw | xxd -i > ~/esplay-retro-emulation/esplay-launcher/main/gfxTile.inc
+
+#generate battile
+ffmpeg -i ~/esplay-retro-emulation/assets/BAT.bmp -f rawvideo -pix_fmt rgb565 ~/esplay-retro-emulation/assets/battile.raw -y
+rm ~/esplay-retro-emulation/esplay-sdk/esplay-components/esplay-hal/include/bat_tile.inc
+cat ~/esplay-retro-emulation/assets/battile.raw | xxd -i > ~/esplay-retro-emulation/esplay-sdk/esplay-components/esplay-hal/include/bat_tile.inc
+
+#generate osd
+ffmpeg -i ~/esplay-retro-emulation/assets/menu_bg.bmp -f rawvideo -pix_fmt rgb565 ~/esplay-retro-emulation/assets/menu_bg.raw -y
+rm ~/esplay-retro-emulation/esplay-sdk/esplay-components/osd-menu/include/menu_bg_tile.inc
+cat ~/esplay-retro-emulation/assets/menu_bg.raw | xxd -i > ~/esplay-retro-emulation/esplay-sdk/esplay-components/osd-menu/include/menu_bg_tile.inc
+
+ffmpeg -i ~/esplay-retro-emulation/assets/menu_gfx.bmp -f rawvideo -pix_fmt rgb565 ~/esplay-retro-emulation/assets/menu_gfx.raw -y
+rm ~/esplay-retro-emulation/esplay-sdk/esplay-components/osd-menu/include/menu_gfx_tile.inc
+cat ~/esplay-retro-emulation/assets/menu_gfx.raw | xxd -i > ~/esplay-retro-emulation/esplay-sdk/esplay-components/osd-menu/include/menu_gfx_tile.inc
+
+
+#generate splash
 rm ~/esplay-retro-emulation/assets/tile.raw
 ffmpeg -i ~/esplay-retro-emulation/assets/show.png -f rawvideo -pix_fmt rgb565 ~/esplay-retro-emulation/assets/tile.raw -y
 #cd esplay-txtreader
