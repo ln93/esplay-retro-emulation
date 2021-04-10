@@ -8,6 +8,7 @@
 #include "esp_adc_cal.h"
 #include "gamepad.h"
 #include "pin_definitions.h"
+#include "disp_spi.h"
 
 static esp_adc_cal_characteristics_t characteristics;
 static bool input_battery_initialized = false;
