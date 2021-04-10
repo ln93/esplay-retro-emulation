@@ -178,42 +178,48 @@ void write_nes_frame(const uint8_t *data, esplay_scale_option scale)
             x_ratio = (int)(((NES_FRAME_WIDTH - 1) << 16) / (outputWidth - 1));
             y_ratio = (int)(((NES_FRAME_HEIGHT - 1) << 16) / (outputHeight - 1));
 
-            for (y = 0; y < outputHeight; y++)
+            for (y = 0; y < outputHeight; y += LINE_COUNT)
             {
-                int i = 0;
-                int index = (i)*outputWidth;
-                if (y < 9)
+                for (int i = 0; i < LINE_COUNT; i = i + 1)
                 {
-                    for (x = 0; x < (outputWidth - 24); x++)
+                    if ((y + i) >= outputHeight)
+                        break;
+
+                    int index = (i)*outputWidth;
+
+                    if (y < 9)
                     {
-                        line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
-                    }
-                    for (x = (outputWidth - 24); x < outputWidth; x++)
-                    {
-                        temp1 = *pbat++;
-                        temp2 = (temp1 << 8) + *pbat++;
-                        if (temp2 == 0)
+                        for (x = 0; x < (outputWidth - 24); x++)
                         {
                             line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
                         }
-                        else
+                        for (x = (outputWidth - 24); x < outputWidth; x++)
                         {
-                            line[calc_line][index++] = temp2;
+                            temp1 = *pbat++;
+                            temp2 = (temp1 << 8) + *pbat++;
+                            if (temp2 == 0)
+                            {
+                                line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                            }
+                            else
+                            {
+                                line[calc_line][index++] = temp2;
+                            }
                         }
                     }
-                }
-                else
-                {
-                    for (x = 0; x < outputWidth; x++)
+                    else
                     {
-                        line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        for (x = 0; x < outputWidth; x++)
+                        {
+                            line[calc_line][index++] = getPixelNes(data, x, (y + i), NES_FRAME_WIDTH, NES_FRAME_HEIGHT, outputWidth, outputHeight, x_ratio, y_ratio);
+                        }
                     }
                 }
                 if (sending_line != -1)
                     send_line_finish();
                 sending_line = calc_line;
                 calc_line = (calc_line == 1) ? 0 : 1;
-                send_lines_ext(y, 0, outputWidth, line[sending_line], 1);
+                send_lines_ext(y, 0, outputWidth, line[sending_line], LINE_COUNT);
             }
             send_line_finish();
             break;
