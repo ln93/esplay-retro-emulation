@@ -68,3 +68,12 @@ dkms.conf
 
 # misc
 *.stackdump
+/.vscode/settings.json
+/esplay-launcher/main/gfxTile.inc
+/esplay-txtreader/build/bootloader/bootloader.bin
+/esplay-txtreader/build/esp32/esp32_out.ld
+/esplay-txtreader/build/esplay-txtreader.bin
+/esplay-txtreader/build/partitions.bin
+/esplay-txtreader/Makefile
+/.vscode/settings.json
+/esplay-launcher/main/gfxTile.inc
