@@ -1,11 +1,11 @@
  # ESPlay Retro Emulation 
-![retro-emulation](https://raw.githubusercontent.com/pebri86/esplay-retro-emulation/master/docs/retro_emulation.png) [![GitHub release](https://img.shields.io/github/release/pebri86/esplay-retro-emulation.svg)](https://GitHub.com/pebri86/esplay-retro-emulation/releases/) ![Github All Releases](https://img.shields.io/github/downloads/pebri86/esplay-retro-emulation/total.svg) ![Github Last Commit](https://img.shields.io/github/last-commit/pebri86/esplay-retro-emulation)
+![retro-emulation](https://raw.githubusercontent.com/ln93/esplay-retro-emulation/master/docs/retro_emulation.png) [![GitHub release](https://img.shields.io/github/release/ln93/esplay-retro-emulation.svg)](https://GitHub.com/ln93/esplay-retro-emulation/releases/) ![Github All Releases](https://img.shields.io/github/downloads/ln93/esplay-retro-emulation/total.svg) ![Github Last Commit](https://img.shields.io/github/last-commit/ln93/esplay-retro-emulation)
 
 Description and Video Review
 ----------------------------
 <a href="http://www.youtube.com/watch?feature=player_embedded&v=NfbxcjU85Ac" target="_blank"><img src="https://i.ytimg.com/vi/NfbxcjU85Ac/hqdefault.jpg" alt="Youtube Video" width="480" height="320" border="10" /></a>
 
-This projects is a set of firmware for playing second and third generation gaming platform and to be runs on [esplay-micro-hardware], an ESP32 Devices with WROVER Module (4MB PSRAM) which you could find the details on my [hackaday] page. This hardware also commercially available on the [Makerfabs] Online Store. Due to small Flash ROM (only 4MB) currently only 3 game emulator could be bundled altough this device support 7 emulator including Atari, PC Engine, ZX-Spectrum, MSX, etc.
+This projects is forked from pebri86, as a set of firmware for playing second and third generation gaming platform and to be runs on [esplay-micro-hardware], an ESP32 Devices with WROVER Module (4MB PSRAM) which you could find the details on my [hackaday] page. This hardware also commercially available on the [Makerfabs] Online Store. Due to small Flash ROM (only 4MB) currently only 3 game emulator could be bundled altough this device support 7 emulator including Atari, PC Engine, ZX-Spectrum, MSX, etc.
 The main feature of this projects is bundled as follow:
 - Nofrendo NES Emulator for play Nintendo ROM
 - GNUBoy for play GameBoy and GameBoy Color
@@ -14,11 +14,13 @@ The main feature of this projects is bundled as follow:
 - <b>NEW!</b> Built-in Audio Player for playing music, support WAV, MP3, OGG, and FLAC audio files.
 - Esplay launcher, new code base using UGUI library
 
+This fork modified the GUI and translate most elements to Chinese.
+
 Place your Audio files that supported (mp3, flac, wav and ogg) to audio folder on the root of sdcard, if folder not exist just created one and place audio files on them.
 
-![esplay-audio1](https://raw.githubusercontent.com/pebri86/esplay-retro-emulation/staging/docs/esplay_audio1.jpg)
+![esplay-audio1](https://raw.githubusercontent.com/ln93/esplay-retro-emulation/staging/docs/esplay_audio1.jpg)
 
-![esplay-audio2](https://raw.githubusercontent.com/pebri86/esplay-retro-emulation/staging/docs/esplay_audio2.jpg)
+![esplay-audio2](https://raw.githubusercontent.com/ln93/esplay-retro-emulation/staging/docs/esplay_audio2.jpg)
 
 Launcher Option
 ---------------
@@ -27,7 +29,7 @@ Now you have options to choose launcher, Retro-ESP32 launcher by [32teeth] or ES
 ESPlay Launcher has Wifi AP options so you can upload rom by using web interface via phone or your computer.
 
 Here spoiler Retro-ESP32 launcher running on [esplay-micro-hardware]
-![esplay-micro-hardware](https://raw.githubusercontent.com/pebri86/esplay-retro-emulation/master/docs/esplay-retro-esp32.png)
+![esplay-micro-hardware](https://raw.githubusercontent.com/ln93/esplay-retro-emulation/master/docs/esplay-retro-esp32.png)
 
 Compiling
 ---------
@@ -53,7 +55,7 @@ Extract skeleton.zip from docs, and copy to the root of sdcard. Please provide R
 DONATION
 --------
 The software are free to use but we also accept small donation to make the project lives and continue development
-<a href="https://www.paypal.me/pebri86/1.99USD" target="_blank"><img src="https://raw.githubusercontent.com/pebri86/esplay-retro-emulation/staging/docs/donate.jpeg" alt="Donate" /></a>
+<a href="https://www.paypal.me/ln93/1.99USD" target="_blank"><img src="https://raw.githubusercontent.com/ln93/esplay-retro-emulation/staging/docs/donate.jpeg" alt="Donate" /></a>
 
 Source Author and Special Thanks
 -------------------------
@@ -71,7 +73,7 @@ Thanks to contribute your work for this project.
 [Paspartout]:https://github.com/Paspartout
 [OtherCrashOverride]:https://github.com/OtherCrashOverride
 [Go-Play]:https://github.com/OtherCrashOverride/go-play
-[esplay-micro-hardware]: https://github.com/pebri86/esplay_micro_hardware
+[esplay-micro-hardware]: https://github.com/ln93/esplay_micro_hardware
 [Makerfabs]: https://www.makerfabs.com/esplay-micro.html
 [hackaday]: https://hackaday.io/project/166707-esplay-micro
-
+[pebri86]: https://github.com/pebri86/esplay-retro-emulation
